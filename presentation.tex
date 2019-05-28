@@ -54,6 +54,12 @@
 % Customize Warsaw block title and background colors
 \setbeamercolor{block title}{bg=red!50!black,fg=white}
 
+
+% List your packages here
+
+\usepackage[colorinlistoftodos]{todonotes}
+
+
 \title[Proposal Short Title]{Proposal Title}
 
 % % A subtitle is optional and this may be deleted
@@ -102,6 +108,9 @@ Advisor: Dr. Suruz Miah}
     \tableofcontents[currentsection,currentsubsection]
   \end{frame}
 }
+
+
+
 
 % Let's get started
 \begin{document}
@@ -163,8 +172,9 @@ Advisor: Dr. Suruz Miah}
 \begin{frame}{Subsystem Level Functional Requirements}{Block Diagram}
 
 \begin{figure}
-    \centering
-    \includegraphics[scale=.6]{figs/ipe/subsystemBlockDiagramAlternate}
+  \centering
+  \missingfigure{Add your figure here.}  
+    % \includegraphics[scale=.6]{figs/ipe/subsystemBlockDiagramAlternate}
     \caption{Subsystem level block diagram}
     \label{fig:subsysblock}
 \end{figure}
