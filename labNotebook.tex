@@ -208,6 +208,75 @@ I picked up a department laptop from Mr. Mattus today. He cleared the partition
 completely, so no time had to be spent removing a previous operating system from the
 machine. Then, I installed Ubuntu 16.04.6 LTS on the system with a bootable USB flash
 from the link provided on the BEMOSS installation guide.
+
+\labday{Wednesday, May 22, 2019}
+As recommended by Dr. Miah, I worked on running BEMOSS on the previous team’s laptop. By running \texttt{./startBEMOSS\_GUI.sh} inside the directory \texttt{/home/bemoss/BEMOSS3.5/GUI}, I was able to start up the BEMOSS Launcher Wizard. By selecting Run BEMOSS in the TKinter GUI the server was started,
+and I was able to connect to the local web server at \texttt{localhost:8082.}. At this point, the software was able to detect the WeMo Insight Switch and thus control the Philips Hue bulb connected to it. I was not able to control the motor due to time constraints, but I will do so soon.
+\medbreak\noindent
+I did some more research on the features that BEMOSS offers at https://github.com/
+bemoss/BEMOSS3.5/wiki/BEMOSS-Features including the ability to provide local and remote monitoring and security.
+
+\labday{Thursday, May 23, 2019}
+
+\labday{Friday, May 24, 2019}
+The hierarchy of BEMOSS was researched today with the motivation of understanding
+the software better in the Developer Resources. The first layer consists of the UI and User
+Management which reside in the central server. Here admins can manage different nodes
+on the network and either deny or accept requests from users. Layer 2 is the BEMOSS
+Application and Data Management Layer which allows developers to create custom
+applications for target devices that can be added to the UI. It may be interesting to explore
+this feature once I have gotten a better idea of what sort of original contributions I would
+like to make to the project. A motivation for this part of BEMOSS is to integrate web
+services like IFTTT (IF This Then That) which may be interesting to use. The third layer is
+the operating system and framework layer consisting of the agent platform VOLTTRON
+developed by the Pacific Northwest National Laboratory. Six different agents perform
+various different tasks such as detecting new devices (lighting/plug load controllers)
+on the network and monitoring them to ensure they are running properly. Layer 4 is
+the BEMOSS connectivity layer that handles the communication between the operating
+system layer and the physical hardware devices. This is where support is extended
+to different communication technologies like Wi-Fi, Ethernet, and Serial(RS-485). Each
+device supported by BEMOSS has an API translator needed to handle the differences in
+device attributes.
+
+\labday{Monday, May 27, 2019}
+No work was done due to Memorial Day.
+
+\labday{Tuesday, May 28, 2019}
+The outline for the presentation on May 31 follows:
+\begin{itemize}
+\item Introduction
+\item Applications of BEMOSS
+\item Hardware/software needed to install BEMOSS
+\item Immediate future work
+\end{itemize}
+
+The following questions are answered to determine what needs to be added to the
+presentation:
+
+\begin{itemize}
+\item What is BEMOSS? BEMOSS or Building Energy Management Open Source Software
+is an agent-based software platform engineered to allow small- and medium-sized
+commercial buildings to more seamlessly integrate equipment designed for sensing
+and control. This software can allow building owners and engineers to manage
+building energy use better by monitoring different load control devices such as
+lighting loads, plug loads, and HVAC controllers.
+\item How can BEMOSS be applied to the real world?
+\item What hardware and software is needed to install BEMOSS?
+\item What kind of future work is available to be implemented with this software?
+\end{itemize}
+
+After working on the presentation, I worked in the lab to document the toggling of
+the WeMo insight switch with BEMOSS. Most of this information was gathered from
+https://github.com/bemoss/BEMOSS3.5/wiki/User-Guide-for-BEMOSS-UI.
+Once the BEMOSS server has started, type localhost:8082 in the web browser to go to
+the BEMOSS Web UI. The username is ’admin’ and the password is the one set during
+installation. To discover the switch, click the "Discover New Devices" tab in the left
+navigation bar. Under the "All Plug Load Controllers" menu, select either "All Plug Load
+Controllers" or "Belkin International Inc. Insight." Click "Discover Selected Devices" to
+complete the process. The number of discovered devices will appear on the Discover
+New Devices tab. If only one device has been discovered, a 1 will appear next to the
+name Discover/Manage. On the Discover/Manage page, approve the device by setting the
+approval status to "Approved" then select "Save Changes to Plugload Controllers." Navigate to the tab NODE$1$. Select "View All" under "Plugload", then select the WeMo smart plug icon to change the status of the plug and view the power consumption.  
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
