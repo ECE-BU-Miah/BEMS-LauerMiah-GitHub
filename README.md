@@ -5,5 +5,6 @@
 
 ## Authors: Brian Lauer and Dr. Suruz Miah
 
+# Note
 
-This is a test
+The file labNotebook.pdf contains records of work done in the lab or at home while meeting.pdf contains the meeting minutes.
