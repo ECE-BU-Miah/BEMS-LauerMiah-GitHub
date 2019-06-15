@@ -366,6 +366,22 @@ The post-installation instructions were followed on the BEMOSS wiki, but, at the
 \labday{Wednesday, June 12, 2019}
 After viewing the issue on the BEMOSS repo:
 \url{https://github.com/bemoss/BEMOSS3.5/issues/47}, I found that the IP address in \texttt{parent\_ip.txt} did not match the IP of my system, so I changed this to the correct IP. This corrected the problem and the BEMOSS web server was able to boot successfully. Note this text file is only created after BEMOSS is run.
+
+\labday{Thursday, June 13, 2019}
+In the lab, I worked on getting BEMOSS up and running. I mistakenly used the wired connection at first when attempting to run the BEMOSS server but decided to connect to the wireless network ECE-Robotics1 as the Raspberry Pi controlling the motor uses this network. I was able to login as admin into BEMOSS but experienced a problem when attempting to connect to the WeMo Insight switch. When I attempt to navigate to the plug load page to control the WeMo switch the page does not load. It is unclear whether this is an issue with the Insight switch or with BEMOSS itself. I also tried working with the WeMo plug on the previous group's Ubuntu laptop but ran into the same issue leading me to believe it is possibly an issue with the WeMo switch.
+
+\labday{Friday, June 14, 2019}
+More work was done at the beginning of the day to help identify and fix the problem of the Plugload page not loading. After one attempt the page eventually loaded but took a great deal of time. It was finally discovered that the laptop must be connected to the wired network as well as ECE-Robotics1 in order to function properly. Without a wired connection, the PC is unable to connect to the Internet which causes errors. However, although the software was working properly errors were reported by the TSDagent. These are captured in the figure below.
+\bigbreak\noindent
+\includegraphics[scale=0.5]{figs/screenshot61419.png}
+
+I decided to try the same setup on the previous group's machine to see if I would receive the same problem. After running the software on the previous group's machine, I received the same errors with the TSDagent thus concluding that the proposed solution mentioned on page 31 is not a complete one. I will need to email Ashraf with the details on this. 
+\bigbreak\noindent
+In the meantime, I will attempt to get the DC motor running with the BEMOSS software. After modifying the file permissions of three of \texttt{shell\_control.sh} using
+\begin{verbatim}
+chmod u+x shell_control.sh
+\end{verbatim}
+I was able to identify and control the motor using \texttt{pyshell\_control.py} which rotates the motor counter clockwise then clockwise. Soon I need to start creating the GUI that will show all devices on the network and enable the ability to control them. 
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
