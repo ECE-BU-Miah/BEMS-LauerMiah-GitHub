@@ -47,7 +47,7 @@
 %----------------------------------------------------------------------------------------
 %	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %----------------------------------------------------------------------------------------                               
-\UseRawInputEncoding
+%\UseRawInputEncoding
 \documentclass[fontsize=11pt, % Document font size
                              paper=letter, % Document paper type
                              twoside, % Shifts odd pages to the left for easier reading when printed, can be changed to oneside
@@ -410,6 +410,21 @@ Had a short meeting with Dr. Miah in the lab. Here is what needs to be done:
 \item Need to send Ashraf an email asking if he has made any progress on the project.
 \bigbreak\noindent
 All the scripts written by Reece and Bob to control the motor were understood except for \texttt{XBEETEST.py} on the Raspberry Pi as I still need to do research on the XBee modules if I am to use them in the project.
+\end{itemize}
+
+\labday{Friday, June 21, 2019}
+To better understand how to create the GUI to control the devices in the lab, I read up on the documentation for PyGTK at \url{https://python-gtk-3-tutorial.readthedocs.io/en/latest/layout.html#}. 
+
+\labday{Sunday, June 23, 2019}
+Work was done on researching a device to integrate within BEMOSS. Here are some possible ideas:
+\begin{itemize}
+\item Ultrasonic Range Finding module - hcsr$04$\\
+I have one of these and have been programming it some and could potentially have an interesting application for IoT. However, this does seem rather simple and would not likely take long to fully implement.
+\item Digital Multimeter
+\item Accelerometer
+\item Gyroscope
+\item Dust Sensor \url{https://www.waveshare.com/dust-sensor.htm}
+\item PM2.5 Particle Sensor \url{https://www.cytron.io/p-honeywell-pm2.5-particle-sensor-module} Looking at this module it uses a two wire UART output so it would likely be very easy to interface with the Raspberry Pi 
 \end{itemize}
 \end{addmargin}
 
