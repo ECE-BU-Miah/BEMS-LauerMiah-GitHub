@@ -426,6 +426,56 @@ I have one of these and have been programming it some and could potentially have
 \item Dust Sensor \url{https://www.waveshare.com/dust-sensor.htm}
 \item PM2.5 Particle Sensor \url{https://www.cytron.io/p-honeywell-pm2.5-particle-sensor-module} Looking at this module it uses a two wire UART output so it would likely be very easy to interface with the Raspberry Pi 
 \end{itemize}
+
+\labday{Monday, June 24, 2019}
+While building the GUI, I came to realize that Gtk is simply too complex for me, so I decided to change tkinter which is a bit simpler. At this point I have finished the GUI and simply need to connect the callbacks to the events using tk.widget.bind(event,callback). Once this has been done I will be ready to move on to implementing the logic to control the wemo switch and motor within the tkinter application.
+
+\labday{Tuesday, June 25, 2019}
+To better understand lower level networking concepts, I will use the python module \texttt{socket} to ping addresses on the network and resolve their hostnames. It may save time to use the \texttt{nmap} command used by the previous group; however, I would like to build a system from scratch completely in python. As the motor needs to be implemented within BEMOSS as soon as possible, I will work on this first and determine how to use the wemo switch later. I will base some of my work off \cite{scanopy}. However, after working for some time I found that the program I was attempting to write was rather inefficient and using the nmap command will be much more faster. Thus I have decided to use the scripts written by Bob and Reece. I was able to write a single python script using the socket module to parse through all hosts on the network 'ECE-Robotics$1$' and place them in a list along with their respective IP addresses.
+
+\labday{Wednesday, June 26, 2019}
+I was able to succesfully add the Raspberry Pi and Wemo switch names to the listbox; however if the button 'Discover IoT Devices' is pressed continually, devices will continually be added to the list. Right now I need to determine how to initialize the Raspberry Pi by sshing into it. Then, after selecting the toogle button, I must figure out how to remotely send commands to the device to turn it on or off without having to reconnect. After some tinkering I found that I can simply just ssh into the pi and run a script that simply turns the moltor on when the button is toggled on and off when the button is toggled off. Thus no initializatin will be needed. 
+\bigbreak\noindent
+I need to write scripts to perform the following operations:
+\begin{itemize}
+\item Use nmap to the scan wifi credentials
+\item Place the credentials into text file
+\item Scan for the IP addresses and place them into a text file
+\item Assign the address read from the file to a variable and use this to remotely login to the device (for the RPi)
+\end{itemize}
+However, I have almost no knowledge of bash so this will take some researching. I found a way of storing the first IP address in \texttt{IPAddresses.txt} in a variable that can be used to call the python scripts running on the pi to control the motor. Each time the toggle button is pressed, the text file is read from which is inefficient. More ideally I would like to implement some feature where the IP addresses of the devices are stored in a place that can be accessible to any shell script within the directory. I would like to do this later on; however, I need to move on to working the Wemo switch's API into this application.
+\bigbreak\noindent
+To perform the implementation of the WeMo switch, I will need to read through the documentation provided by the BEMOSS team and some of the python code to find exactly what code needs to be written to create a fully functional system. This code is very complicated thus it may take a great deal of time to work through.
+\bigbreak\noindent
+I found a url on the bemoss website: \url{www.bemoss.org/api-interface-wemo-smart-plug/} that explains how some of the code works. The switch uses the upnp (Universal Plug and Play) protocol. 
+
+\labday{Thursday, June 27, 2019}
+A github gist was located that contains a script to control a wemo device: \url{https://gist.github.com/pruppert/af7d38cb7b7ca75584ef}. I was able to successfully control the wemo switch with this. This will be helpful in understanding the code provided in the bemoss repo and on the bemoss website. The url to send commands to the switch is
+
+\begin{verbatim}
+http://192.168.1.112:49153/upnp/control/basicevent1
+\end{verbatim}
+I attempted to add this url into the method \texttt{getDeviceStatus}; however when I run the code I receive a 500 response (internal server error). After running an nmap scan with the port scan enabled I found that the wemo switch uses both ports 53 and 49153 for communication, so the cause of the problem here is unknown. Later, I determined the problem is that no XML was being sent in the body of the POST request to the device. I simply copied the XML from the python script I found online to control the switch and modified the code from the bemoss website. This is the function used to turn on the Insight switch.
+\begin{Verbatim}[tabsize=4]
+def turnOnSwitch():
+	header = {
+		'Content-Type': 'text/xml; charset="utf-8"',
+		'SOAPACTION': '"urn:Belkin:service:basicevent:1#SetBinaryState"'
+	}
+	body='<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" 
+s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+<s:Body><u:SetBinaryState xmlns:u="urn:Belkin:service:basicevent:1">
+<BinaryState>1</BinaryState>
+</u:SetBinaryState></s:Body></s:Envelope>'
+	controlUrl='http://192.168.1.112:49153/upnp/control/basicevent1'
+	response = requests.post(controlUrl, body, headers=header)
+	del response																																																																																																																																																																																																																																																																																																																																																																																																																										
+\end{Verbatim}
+To understand how this code works more research will need to be done as I know very little about XML.
+
+\labday{Friday, June 28, 2019}
+             
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
