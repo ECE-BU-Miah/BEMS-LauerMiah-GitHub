@@ -470,12 +470,14 @@ s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
 </u:SetBinaryState></s:Body></s:Envelope>'
 	controlUrl='http://192.168.1.112:49153/upnp/control/basicevent1'
 	response = requests.post(controlUrl, body, headers=header)
-	del response																																																																																																																																																																																																																																																																																																																																																																																																																										
+	del response																																										
 \end{Verbatim}
 To understand how this code works more research will need to be done as I know very little about XML.
 
 \labday{Friday, June 28, 2019}
-             
+Layer 1 (UI layer) of the BEMOSS hierarchy was researched for a few hours to try and understand how new devices are to be added to BEMOSS. Details such as how the 	Model-Message-View-Template works and the UI project structure are provided. However, this doesn't really provide any details on what happens when an element in the UI is selected such as pressing a button to toggle a device on and how the message flows down to the device. In other words, I'm not able to understand the chain between the UI layer and the device as this is not documented on the BEMOSS wiki. A single file I found that could be possibly helpful is \texttt{~/BEMOSS3.5/Web\_Server/webapps/device/templates/plugload/plugload.html}. This will require some digging to understand the html, css, and jQuery as I have little to no experience in any of these. In addition, I may need to research the agent based system to understand how these agents interact with the devices' APIs.   
+
+\labday{Monday, July 1, 2019}
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
