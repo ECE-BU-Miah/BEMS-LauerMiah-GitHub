@@ -478,6 +478,16 @@ To understand how this code works more research will need to be done as I know v
 Layer 1 (UI layer) of the BEMOSS hierarchy was researched for a few hours to try and understand how new devices are to be added to BEMOSS. Details such as how the 	Model-Message-View-Template works and the UI project structure are provided. However, this doesn't really provide any details on what happens when an element in the UI is selected such as pressing a button to toggle a device on and how the message flows down to the device. In other words, I'm not able to understand the chain between the UI layer and the device as this is not documented on the BEMOSS wiki. A single file I found that could be possibly helpful is \texttt{~/BEMOSS3.5/Web\_Server/webapps/device/templates/plugload/plugload.html}. This will require some digging to understand the html, css, and jQuery as I have little to no experience in any of these. In addition, I may need to research the agent based system to understand how these agents interact with the devices' APIs.   
 
 \labday{Monday, July 1, 2019}
+To understand how the device discovery agent works, I studied each line of 
+\begin{verbatim}
+BEMOSS3.5/Agents/DeviceDiscoveryAgent/devicediscovery/agent.py
+\end{verbatim}
+carefully. In \texttt{BEMOSS3.5/BEMOSS\_lib/db\_helper.py} a class named 
+% Note using underscore by itself will throw an error as it is normally used to typeset underscores in math mode. 
+db\_connection is defined with method database\_connect that reads the system's ip address from \texttt{parent\_ip.txt} and passes it as an argument into the method psycopg2.connect in order to connect to the PostgreSQL database named 'bemossdb'. Other keyword arguments that must be passed include port number, database name, user name, and database password. The full method call is
+\begin{verbatim}
+con = psycopg2.connect(host='136.176.122.127',port='5432',database='bemossdb', user='admin',password='admin')
+\end{verbatim}
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
