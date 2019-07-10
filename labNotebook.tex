@@ -140,7 +140,6 @@
     pdfview=FitB]{hyperref}
 
 \usepackage[stretch=10]{microtype} % Slightly tweak font spacing for aesthetics
-
 %\setlength\parindent{0pt} % Uncomment to remove all indentation from paragraphs
 
 %----------------------------------------------------------------------------------------
@@ -488,6 +487,55 @@ db\_connection is defined with method database\_connect that reads the system's 
 \begin{verbatim}
 con = psycopg2.connect(host='136.176.122.127',port='5432',database='bemossdb', user='admin',password='admin')
 \end{verbatim}
+
+\labday{Tuesday, July 2, 2019}
+Today, I copied the file \texttt{API\_WeMoPlugload.py} and renamed the copy to \texttt{API\_rpi.py} in the directory \texttt{BEMOSS3.5/DeviceAPI}. However, this did not result in a new device named RPI appearing in the "Discover New Devices" page on the BEMOSS dashboard. Thus, I must do further research to determine where these names are added to the dashboard. After using the command \texttt{grep -r 'All Plug Load Controllers' .} in the directory $\sim$\texttt{/BEMOSS3.5} I was able to determine which html file places the vendor name and device model on the "Discover New Devices" page. This file is
+\begin{verbatim}
+/BEMOSS3.5/Web_Server/webapps/
+discovery/templates/discovery/manual_discovery.html
+\end{verbatim}
+After changing the values of \texttt{'vendor\_name'} and \texttt{'api\_name'}in the dictionary returned by the method \texttt{API\_info}, the rpi was still not appearing in the device discovery page. An error was encountered as the values corresponding to the key \texttt{vendor\_name} in the copied python script \texttt{API\_API\_WeMoPlugloadtest}were the same as the values in the original API script \texttt{API\_WeMoPlugload}. Thus it is impossible to have two devices with different vendor names and the same device model.
+
+\labday{Wednesday, July 3, 2019}
+After receiving a message from Dr. Miah, the current goal is to find a way to add a new copy of the plugload interface into the same directory as the current one and change the variables \texttt{vendor\_name} and \texttt{device\_model}. Following the meeting with Dr. Miah, I realized that I must work to fully understand the BEMOSS interface and the wemo switch otherwise I will not be able implement a new device successfully. This must be done by understanding the source code. I started reading through the device discovery agent source code line by line to fully understand it.  
+
+\labday{Thursday, July 4, 2019}
+After making some comments in the \texttt{agent.py} file, indentation errors appeared while launching the server, the decision was made to reclone the BEMOSS repo. Progress must be made quickly today to understand the code and complete the clone of the plugload interface. I found a try ... except statement on lines 307 to 314 of \texttt{agent.py} that prevent the device from being detected. In a nutshell, the agent queries the PostgreSQL database with the query \texttt{SELECT * from supported\_devices where vendor\_name = 'Belkin International Inc.' and device\_model = 'Insight'} when querying the Insight. If no row in the table is found, then it is determined that the device is not supported by BEMOSS.
+\bigbreak\noindent
+I attempted to place a copy of the file \texttt{API\_WeMoPlugload.py} in a separate directory named \texttt{research}; however, when running the file \texttt{platfrom\_initiator.py} the database prevents a device with a duplicate key from being added.  
+
+\labday{Friday, July 5, 2019}
+Several attempts to restart the server in the lab were made by recloning the repo as many errors were encountered causing the server to not startup.
+
+\labday{Monday, July 8, 2019}
+I was able to detect a new device with the copy of the wemo plug api in the second folder I made. On the device discovery page, the device name and model were the ones I declared in the \texttt{API\_WeMocopy.py} file. Once the device was discovered, the vendor name and model did not match what I provided in the previously mentioned file. Plug and play discovery is never completed due to this error reported by the device discovery agent:
+\begin{verbatim}
+IntegrityError: duplicate key
+value violates unique constraint
+"device_info_pkey"\nDETAIL:  
+Key (agent_id)=(Insi_231707K120123A) already exists.\n\n')
+\end{verbatim}
+I restarted BEMOSS to see if this was an issue due to the fact that the device had not been deleted from the device info table. Since significant alterations to the source code will likely be necessary, it was decided that the focus will now be placed on the dc motor interface now which is due July 31, 2019.
+\bigbreak\noindent
+The first step I took in understanding how to add the device to the software is hardcoding a dictionary with ip address, mac address, device model (raspberrypi's username), and vendor name (Raspberry Pi Foundation). I defined these variables in a method named discover in the class API inside the module \texttt{API\_PittmanMotor}. In the near future, an automated plug and play discovery process will need to be implemented but for now I would like to simply hardcode the parameters. Since I am a little lost on how the web framework used to build the platform (Django) works, I decided to watch a tutorial on it and do further research.
+\bigbreak\noindent
+Django is an open source web framework. It is based on the model, view, template architecture system as explained below.
+\begin{enumerate}
+\item Model: Interact with and validate python data
+\item Template: Presentation layer (html files)
+\item View: Decides which template to display by interacting with the model
+\end{enumerate}
+Project uses multiple apps to define the functionality of the site.
+
+\labday{Wednesday, July 9, 2019}
+I postponed increasing knowledge as the more important task at the moment is understanding the API translator methods such as \texttt{setDeviceStatus}, \texttt{getDataFromDevice}. After starting up BEMOSS without any code to the body of the previously mentioned functions the device was able to be succesfully discovered, but the navigation bar disappeared when setting the device status to approved in the UI. Thus more configuration will be necessary to create a system that perfectly emulates the plugload interface.
+\bigbreak\noindent
+As a test I ran the file \texttt{DeviceAPI/BaseAPI\_WeMo.py} in a virtual environment to toggle the wemo switch. After commenting out a couple of method calls in the main function I was able to succesfully toggle the device. This should be a good way of testing the raspberry pi without having to start BEMOSS everytime.
+\bigbreak\noindent
+Something I found on the developer resources is that the Device Agent is responsible for handling most of the communication with the UI. It will likely beneficial for me to read over this source code. The method \texttt{agent\_setup} contains a decorator that registers the method to the callback 'onsetup' which is an event triggered at one of the agents' stages of life. Inside this method, three method calls generate callbacks to methods defined inside the BasicAgent class which are \texttt{updateUIBehavior}, \texttt{deviceIdentifyBehavior}, and \texttt{deviceControlBehavior}.
+\bigbreak\noindent
+I added code to \texttt{setDeviceStatus} in the file \texttt{API\_RaspberryPi.py} to ssh into the raspberry pi and run python scripts depending if the device status is set to "ON" or "OFF". Once I started up BEMOSS though I ran into some problems as had not defined the method \texttt{getDataFromDevice}. This must return a dictionary otherwise errors will arise when displaying the data on the dashboard.
+    	
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
