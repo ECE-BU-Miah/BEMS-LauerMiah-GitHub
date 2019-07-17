@@ -527,7 +527,7 @@ Django is an open source web framework. It is based on the model, view, template
 \end{enumerate}
 Project uses multiple apps to define the functionality of the site.
 
-\labday{Wednesday, July 9, 2019}
+\labday{Tuesday, July 9, 2019}
 I postponed increasing knowledge as the more important task at the moment is understanding the API translator methods such as \texttt{setDeviceStatus}, \texttt{getDataFromDevice}. After starting up BEMOSS without any code to the body of the previously mentioned functions the device was able to be succesfully discovered, but the navigation bar disappeared when setting the device status to approved in the UI. Thus more configuration will be necessary to create a system that perfectly emulates the plugload interface.
 \bigbreak\noindent
 As a test I ran the file \texttt{DeviceAPI/BaseAPI\_WeMo.py} in a virtual environment to toggle the wemo switch. After commenting out a couple of method calls in the main function I was able to succesfully toggle the device. This should be a good way of testing the raspberry pi without having to start BEMOSS everytime.
@@ -535,7 +535,48 @@ As a test I ran the file \texttt{DeviceAPI/BaseAPI\_WeMo.py} in a virtual enviro
 Something I found on the developer resources is that the Device Agent is responsible for handling most of the communication with the UI. It will likely beneficial for me to read over this source code. The method \texttt{agent\_setup} contains a decorator that registers the method to the callback 'onsetup' which is an event triggered at one of the agents' stages of life. Inside this method, three method calls generate callbacks to methods defined inside the BasicAgent class which are \texttt{updateUIBehavior}, \texttt{deviceIdentifyBehavior}, and \texttt{deviceControlBehavior}.
 \bigbreak\noindent
 I added code to \texttt{setDeviceStatus} in the file \texttt{API\_RaspberryPi.py} to ssh into the raspberry pi and run python scripts depending if the device status is set to "ON" or "OFF". Once I started up BEMOSS though I ran into some problems as had not defined the method \texttt{getDataFromDevice}. This must return a dictionary otherwise errors will arise when displaying the data on the dashboard.
-    	
+
+\labday{Wednesday, July 10, 2019}
+The problem involving the side navigation bar not being rendered was not a result of no dictionary being returned from \texttt{getDataFromDevice}. I found that each group of the mac address must not be separated by colons; rather no delimiter is to be used at all. Once I removed the colons from the MAC address in the API file, I was able to succesfully control the Raspberry Pi at my house. I wrote scripts that are able to turn on and off an led connected to one of the GPIO pins on my RPi. In the lab, it should be fairly simple to run the scripts on the RPi in the lab \texttt{XBEEON.py} and \texttt{XBEEOFF.py} to send commands to the motor in place of the scripts I use to control the LED. 
+\bigbreak\noindent
+A second problem still exists stemming from a KeyError exception in the file 
+
+\texttt{Web\_Server/webapps/dashboard/templatetags/device\_count\_in\_zone.py}. I get the error \texttt{Cannot access the value, returning default: '0'} which is printed in the function \texttt{get\_value\_with\_default} when the dictionary does not contain one of the keys passed as an argument into the function. This is shown in the screen capture below.
+\includegraphics[scale=0.5]{figs/orderedDictError.png} 
+\bigbreak\noindent
+In the lab, I was able to successfully control the motor with the plugload interface by making changes to the file \texttt{API\_RaspberryPi.py}. More work was done to correct the error.
+
+\labday{Thursday, July 11, 2019}
+To test whether the new API script I wrote was the cause of the problem, I moved the file \texttt{API\_RaspberryPi.py} to the home directory and restarted BEMOSS. The message \texttt{Cannot access the value, returning default: 0} was still printed to the server log at startup, so the only thing I can conclude is that this is not an issue with the new API file. As another test, I will install BEMOSS in another directory. The same messages were printed to the log when attempting to the get the number of devices on the network, so at this point the messages will be ignored.
+\bigbreak\noindent
+As a first step in automating the discovery process, I added the line to the method discover in \texttt{API\_RaspberryPi.py}
+\begin{verbatim}
+nmap = subprocess.check_output('sudo nmap -sn 192.168.1.0/24',shell=True)
+\end{verbatim}
+When this line is run, a \texttt{CalledProcessError} is thrown which remove nmaps as an option that can be used to detect device information. The command was attempted to be run without superuser priviliges; however, raw IP packets are needed to resolve MAC addresses and manufacturer names with nmap.
+
+\labday{Friday, July 12, 2019}
+I completed writing the discover method for the Raspberry Pi API today. A file named \texttt{ownerinfo.json} was added to the research directory where the mac address of the Raspberry Pi used to control the motor can be added. This makes identifying the correct Raspberry Pi easier as it is possible that more than one Pi could be on the network at the same time. The command nmap was used to ping all machines on subnet 255.255.255.0. After this has been done information is stored in the machine's cache so that the address resolution protocol (arp command) may be used to find the mac addresses corresponsding to the ip address on the network. After this, it is determined whether the pi's mac addresses is located in the output of the \texttt{arp -a} command.
+\bigbreak\noindent
+I need to research DNS python packages to find the username of Raspberry Pi. Also, methods for storing the Raspberry Pi's password securely in the BEMOSS database must be researched.
+
+\labday{Monday, July 16, 2019}
+After doing some research I decided that I will be attempting to discover the Raspberry Pi with SSDP (Simple Service Discovery Protocol) rather than using the \texttt{nmap} and \texttt{arp} commands. Research will need to be done on these two protolocols to be able to understand how to discover and control the RPi.
+\bigbreak\noindent
+UPnP or Universal Plug and Play consists of three different protocols which are 
+\begin{itemize}
+\item SSDP (Simple Service Discovery Protocol) for finding devices on the network
+\item SCPD (Service Control Point Definition) defines the actions provided 	
+\item SOAP (Simple Object Access Protocol) calls actions
+\end{itemize}
+I found after further research that UPnP is simply not going to work with raspberry pi as it is more designed for home media servers and not suited for my specific application which is running commands on the Pi.
+
+\labday{Tuesday, July 16, 2019}
+I attempted to run the command \texttt{sudo nmap -sn 192.168.1.0/24} in the discover method; however, I was not able to login in the volttron log terminal although the prompt for the password did appear. I attempted to launch the terminal as superuser by running the command to launch the terminal in the \texttt{GUI.py} as superuser. However, I ran into several issues involving priviliges although I did remove the sudo prefix from the command. Now I will reinstall BEMOSS.
+\bigbreak\noindent
+Rather than using both the nmap and arp commands together I made the decision to running the nmap command as superuser to resolve the manufacturer names and MAC addresses. I ran into a problem when using \texttt{subprocess.call('sudo nmap -sn 192.168.1.0/24')} as the terminal does not allow any text to be passed to stdin while the agents are running. In addition, execution of the function will continue even though system password is provided. In the end I decided to revert back to the original code as the motivation for running nmap as super user is to retrieve the mac and IP addresses.
+\bigbreak\noindent
+Lastly, I found that the Raspberry Pi contains an option named Remote GPIO in the Raspi-Config which will enable the GPIO pins to be controlled over the network. No login is required to access the pins on this server only the IP address. This will hopefully streamlines tasks involving the gpio pins greatly, 
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
