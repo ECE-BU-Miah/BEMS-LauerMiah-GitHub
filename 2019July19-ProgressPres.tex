@@ -161,6 +161,28 @@ Play video
 \end{frame}
 
 \section{Improved Motor Interface}
+\begin{frame}{Improved Motor Interface}{}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\includegraphics[scale=0.25]{figs/deviceIdentifyPlugload.png}
+\caption{Identify device widget}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+	\begin{itemize}
+		\item Implement device identify behavior  
+		\item Requires querying the device for information
+		\item Must find a way of checking the status of the remote XBee module
+		\item Toggle visually noticeable device variable twice with pause in between
+		\begin{itemize}
+			\item On motor: status
+		\end{itemize}
+		\item Replace plugload image with motor image
+	\end{itemize}
+\end{column}
+\end{columns}	
+\end{frame}
 
 \begin{frame}{Improved Motor Interface}{}
 	\begin{itemize}
@@ -168,6 +190,11 @@ Play video
 		\item Control GPIO pins over the Internet
 		\item gpiozero or pigpio python libraries
 		\item Only requires IP address, no login credentials
+		\item Start server with \texttt{pigpiod} (pigpio daemon)
+		\item Option \texttt{-n} allows only specified hosts to connect
+		\begin{itemize}
+			\item Example: \texttt{sudo pigpiod -n "IP ADDRESS"}
+		\end{itemize}
 	\end{itemize}
 \end{frame}
 
@@ -176,6 +203,7 @@ Play video
 \begin{frame}{Plans}{}
 	\begin{itemize}
 		\item Find new device to implement with BEMOSS
+		\item Possibly a sensor
 		\item Implement PID control algorithm with motor to control speed
 	\end{itemize}
 \end{frame}
