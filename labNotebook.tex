@@ -576,7 +576,133 @@ I attempted to run the command \texttt{sudo nmap -sn 192.168.1.0/24} in the disc
 \bigbreak\noindent
 Rather than using both the nmap and arp commands together I made the decision to running the nmap command as superuser to resolve the manufacturer names and MAC addresses. I ran into a problem when using \texttt{subprocess.call('sudo nmap -sn 192.168.1.0/24')} as the terminal does not allow any text to be passed to stdin while the agents are running. In addition, execution of the function will continue even though system password is provided. In the end I decided to revert back to the original code as the motivation for running nmap as super user is to retrieve the mac and IP addresses.
 \bigbreak\noindent
-Lastly, I found that the Raspberry Pi contains an option named Remote GPIO in the Raspi-Config which will enable the GPIO pins to be controlled over the network. No login is required to access the pins on this server only the IP address. This will hopefully streamlines tasks involving the gpio pins greatly, 
+Lastly, I found that the Raspberry Pi contains an option named Remote GPIO in the Raspi-Config which will enable the GPIO pins to be controlled over the network. No login is required to access the pins on this server only the IP address. This will hopefully streamlines tasks involving the gpio pins greatly.
+
+\labday{Wednesday, July 17, 2019}
+Following work on my presentation, I discussed with Dr. Miah using the Remote GPIO which was agreed upon. However, for the next presentation I would like to have a fully functional interface using the current method. This will require me to encrypt both the username and password of the Raspberry Pi and store in the json file that the raspberry pi API file accesses. Thus some research will need to be done on how to perform this encryption. Later (next week) I would like to get the remote GPIO interface working and implemented. Some problems still exist with this method such as security as multiple different machine may be able to control the GPIO pins at once. Also, the XBee library that is used to control the xbee modules might not be compatible with the latter method. I know very little of how zigbee communication works or how the modules work, so this will require much research.
+\bigbreak\noindent
+I encrypted both the username and password of the raspberry pi by using the function \texttt{encrypt\_value} in the module \texttt{bemoss\_lib.utils.encrypt} and placed both these encrypted strings in the json file. I found that I needed to decrypt the values when formatting the string used to ssh into the pi. After finding that only the password must be encrypted, I replaced the username in the json file with the plain text version.
+
+\labday{Thursday, July 18, 2019}
+Today, I found that I have not implemented the method \texttt{identifyDevice} in the Raspberry Pi API. It is to be implemented as follows:
+\begin{itemize}
+\item At start, \texttt{identifyDeviceResult = False}
+\item Keep the current state of one of the changeable device variables (in this case the status)
+\item Change device variable that is visually noticeable
+\item Delay for 5 seconds
+\item Change device variable back to previous state
+\item if successful, \texttt{identifyDeviceResult = True}
+\end{itemize}
+After looking through some of the Philips Hue API code, I found that the method \texttt{get\_variable} is used to check whether the device is on or off rather than directly communicating with the device through the method \texttt{getDataFromDevice} like in the WeMo plugload API. As a test I will print \texttt{get\_variable('status')}in the method \texttt{identifyDevice} in the Raspberry Pi API to check whether this key value pair is in the dictionary defined in the BaseAPI's constructor. As of now, I do not know of a way of checking the status of the motor from the RPi using the GPIO pins and XBEE modules, so using the method from the Philips Hue API would be ideal.
+\bigbreak\noindent
+After pressing the button \texttt{Identify Device} in the list of plugload controllers, the message logged to the console is always \texttt{'ON'}. The reason for this is likely the code I wrote in the method \texttt{getDataFromDevice} which is shown below:
+\begin{Verbatim}[tabsize=4]
+def getDataFromDevice(self):
+	# TODO 
+	devicedata = dict()
+	devicedata['status'] = BEMOSS_ONTOLOGY.STATUS.POSSIBLE_VALUES.ON 
+	# setting the value to "ON"
+	return devicedata
+\end{Verbatim}
+The statement \texttt{BEMOSS\_ONTOLOGY.STATUS.POSSIBLE\_VALUES.ON = 'ON'} is defined in the file \texttt{BEMOSS\_ONTOLOGY}. From the BEMOSS developer resources for layer 4 of the BEMOSS hierarchy I found:\\
+
+"Out of all the above methods, the getDataFromDevice method can be periodic. This means
+it can query and receive device data periodically. This ensures that the data are updated."\\
+
+In the Basic Agent source code, a method name \texttt{deviceMonitorBehavior} is called periodically which calls \texttt{getDeviceStatus}. A call to \texttt{getDataFromDevice} occurs here which returns a dictionary and calls \texttt{convertDeviceStatus} to update the \texttt{variables} dictionary which is declared by the \texttt{BaseAPI}. Thus I must find a way to directly query the Raspberry Pi for the motor status. To start the pin mappings are between the RPi and XBee s2c module are listed below:
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Raspberry Pi & XBee S$2$C\\
+\hline
+$6$ (GND) & VSS\\
+$8$ (TXD) & DIN\\
+$10$ (RXD) & DOUT\\
+$17$ ($3$V$3$) & VCC\\
+\hline
+\end{tabular}
+\end{center}
+
+\labday{Friday, July 19, 2019}
+In the afternoon session with the members of ram group, I experimented with the AT commands used to control the remote XBee connected to the L$298$N H-Bridge driver. The pin mappings are shown in the table below:
+\bigbreak
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+XBee & L$298$N\\
+\hline
+IO$3$ & I$2$\\
+\hline
+IO$4$ & I$1$\\
+\hline
+\end{tabular}
+\end{center}
+\bigbreak
+Also, from the L$298$N datasheet this table lists the DC motor control A pins and how the output of the h-bridge is effected:
+\bigbreak
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+EA & I$1$ & I$2$ & Motor A status\\
+\hline
+$0$ & $0$ & $1$ & Clockwise rotation\\
+\hline
+$0$ & $1$ & $0$ & Anticlockwise rotation\\
+\hline
+\end{tabular}
+\end{center}
+\bigbreak
+As a side note, the EA port is used for PWM.
+\bigbreak
+However, the shaft rotations are swapped when using the motor in the lab.
+
+\labday{Monday, July 22, 2019}
+One of the AT commands use to read the digital IO of the XBee modules is the IC (Digital Change Detection) command. The command can "set or read the digital I/O pins to monitor  for changes in the I/O state." When the DIO state changes, a sample can be sent immediately to the coordinator XBee from the remote XBee. However, this does not send any information on the state of the pin. The command IS "forces a read of all enabled digital and analog input lines." Of course, here a wire will be need to be connected between the output pin (IO$3$ or IO$4$) and another pin configured as a digital input. When the device needs to be queried for the status of the digital IO pins, the command IS will be sent to the remote XBee. Then using the method \texttt{XBee.wait\_read\_frame} I can read the data received on the UART connection from the remote XBee. Tomorrow, in the lab this will need to be experimented with.
+
+\labday{Tuesday, July 23, 2019}
+I tried using the commands mentioned in yesterday's lab notebook to no avail. This is the code I wrote to try to receive data sent from the remote XBee:
+\begin{Verbatim}[tabsize=4]
+from xbee import XBee
+import serial
+import time
+
+ser = serial.Serial('/dev/ttyS0',9600)
+xbee = XBee(ser)
+
+xbee.remote_at(
+		dest_addr=b'\xff\xff'
+		command='D3'
+		parameter=b'\x04')
+xbee.remote_at(
+		dest_addr=b'\xff\xff'
+		command='IS'
+		parameter=b'\x03')
+while True:
+	try:
+		print(xbee.wait_read_frame())
+	except KeyboardInterrupt:
+		break
+\end{Verbatim}
+The XCTU software was downloaded to work on configuring the remote MotorDriver XBee. IR, sample rate, was set to 1000 ms or a hex value of 0x3e8 and D1, dio1, was set as a digital input. Running \texttt{ser.read()} results in an output of \texttt{'\textbackslash x00'}. Thus, no data is being received even though data should be sent to coordinator at a rate of 1 second.
+
+\labday{Wednesday, July 24, 2019}
+I decided to try experimenting with the digi-xbee python library. After following the instructions to configure the devices at 
+
+\url{https://xbplib.readthedocs.io/en/latest/getting_started_with_xbee_python_library.html#gsginstall},
+I was unable to send AT commands to the end point XBee to toggle the motor. This was later resolved after setting the output values of IO$3$ and IO$4$ to opposite values using XCTU. Later I was able to read the digital values of these IO lines (whether they are high or low). This means that only two IO lines will be needed to control the remote XBee module rather than 4 as the status of the IO line can be read directly even if it is a digial output. A script was written named \texttt{XBEEcontrol.py} that can toggle the motor and determine the status of the enabled pins on the remote XBEE. At the end of the day I was able to successfully identify the motor by toggling it twice with a 5 second pause inbetween. The last part of the implementation is adding the motor images to the frontend.
+
+\labday{Thursday, July 25, 2019}
+I found an picture of the GM$8000$ series motor and added images denoting when the motor is on and off to the \texttt{Web\_Server/static/images} directory after removing the default background with GIMP.
+\bigbreak\noindent
+The next task is working on adding a new device type to BEMOSS called 'Motor'. In the file \texttt{Web\_Server/run/defaultDB.py}, I added the lines
+\begin{verbatim}
+dt5 = DeviceType(id=5, device_type='Motor')
+dt5.save()
+\end{verbatim}
+
+\labday{Friday, July 26, 2019}
+Starting BEMOSS with changing the lines from yesterday result in an error when attempting to add the Raspberry Pi API to the list of the supported devices. After running the file \texttt{BEMOSS3.5/Web\_Server/run/defaultDB.py} by typing \texttt{python Web\_Server/run/defaultDB.py} in the \texttt{BEMOSS3.5} directory the problem was fixed. BEMOSS was started successfully; however, the widget listing Motors was not available on the 'Discover New Devices' page. In the file \texttt{Web\_Server/webapps/discovery/views.py}, on line 58, \texttt{power\_meters} was changed to motors and on line 71, the key value pair for the power\_meters in the \texttt{devices} dictionary was removed and a key value pair for motor was added. After making further changes to the javascript and html manual discovery files, the issue was not corrected. It was later found that a closing div tag was missing from the file to close the div with class "row". Another exception was thrown when trying to access the pass usage statistics. 
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
@@ -607,4 +733,4 @@ Lastly, I found that the Raspberry Pi contains an option named Remote GPIO in th
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: t
-%%% End:
+%%% End
