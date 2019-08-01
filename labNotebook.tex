@@ -702,7 +702,113 @@ dt5.save()
 \end{verbatim}
 
 \labday{Friday, July 26, 2019}
-Starting BEMOSS with changing the lines from yesterday result in an error when attempting to add the Raspberry Pi API to the list of the supported devices. After running the file \texttt{BEMOSS3.5/Web\_Server/run/defaultDB.py} by typing \texttt{python Web\_Server/run/defaultDB.py} in the \texttt{BEMOSS3.5} directory the problem was fixed. BEMOSS was started successfully; however, the widget listing Motors was not available on the 'Discover New Devices' page. In the file \texttt{Web\_Server/webapps/discovery/views.py}, on line 58, \texttt{power\_meters} was changed to motors and on line 71, the key value pair for the power\_meters in the \texttt{devices} dictionary was removed and a key value pair for motor was added. After making further changes to the javascript and html manual discovery files, the issue was not corrected. It was later found that a closing div tag was missing from the file to close the div with class "row". Another exception was thrown when trying to access the pass usage statistics. 
+Starting BEMOSS with changing the lines from yesterday result in an error when attempting to add the Raspberry Pi API to the list of the supported devices. After running the file \texttt{BEMOSS3.5/Web\_Server/run/defaultDB.py} by typing \texttt{python Web\_Server/run/defaultDB.py} in the \texttt{BEMOSS3.5} directory the problem was fixed. BEMOSS was started successfully; however, the widget listing Motors was not available on the 'Discover New Devices' page. In the file \texttt{Web\_Server/webapps/discovery/views.py}, on line 58, \texttt{power\_meters} was changed to motors and on line 71, the key value pair for the power\_meters in the \texttt{devices} dictionary was removed and a key value pair for motor was added. After making further changes to the javascript and html manual discovery files, the issue was not corrected. It was later found that a closing div tag was missing from the file to close the div with class "row". Another exception was thrown when trying to access the pass usage statistics.
+
+\labday{Monday, July 29, 2019}
+The following error was thrown when running the \texttt{platform\_initiator.py} file when attempting to add the motor API to the database.
+\begin{verbatim}
+insert or update on table "supported_devices" 
+violates foreign key constraint
+"supported_devices_device_type_id_1f8832cb_fk_device_type_id"
+DETAIL:  Key (device_type_id)=(5) is not present 
+in table "device_type".
+\end{verbatim}
+This error is fixed by running the file \texttt{Web\_Server/run/defaultDB.py} which will update the BEMOSS database. Next to help clear up the VOLTTRON log file I attempted to dissect the error message reported by the Time Series Database Agent. This error is presented below
+\begin{Verbatim}[tabsize=4]
+Traceback (most recent call last):
+	File "/usr/lib/python2.7/logging/__init__.py", line 861, in emit
+		msg = self.format(record)
+	File "/usr/lib/python2.7/logging/__init__.py", line 734, in format
+		return fmt.format(record)
+	File "/home/ramgroup/BEMOSS3.5/volttron/platform/agent/utils.py", line 242, in format
+		return jsonapi.dumps(dct)
+	File "/home/ramgroup/BEMOSS3.5/env/local/lib/python2.7/
+	site-packages/zmq/utils/jsonapi.py", line 40, in dumps
+		s = jsonmod.dumps(o, **kwargs)
+	File "/home/ramgroup/BEMOSS3.5/env/local/lib/python2.7/
+	site-packages/simplejson/__init__.py", line 399, in dumps
+		**kw).encode(obj)
+	File "/home/ramgroup/BEMOSS3.5/env/local/lib/python2.7/
+	site-packages/simplejson/encoder.py", line 296, in encode
+		chunk = self.iterencode(o, _one_shot=True)
+	File "/home/ramgroup/BEMOSS3.5/env/local/lib/python2.7/
+	site-packages/simplejson/encoder.py", line 378, in iterencode
+		return _iterencode(o, 0)
+	File "/home/ramgroup/BEMOSS3.5/env/local/lib/python2.7/
+	site-packages/simplejson/encoder.py", line 273, in default
+		o.__class__.__name__)
+TypeError: Object of type DefaultEndPoint is not JSON serializable
+Logged from file connection.py, line 1100
+\end{Verbatim}
+A logging issue is obviously present here and these stack traces are printed via logging message. Logging messages can have different levels of severity. In increasing order they are:
+\begin{itemize}
+\item DEBUG: Detailed information, typically of interest only when diagnosing problems.
+\item INFO: Confirmation that things are working as expected.
+\item WARNING: An indication that something unexpected happened, or indicative of some problem in the near future (e.g. ‘disk space low’). The software is still working as expected.
+\item ERROR: Due to a more serious problem, the software has not been able to perform some function.
+\item CRITICAL: A serious error, indicating that the program itself may be unable to continue running.
+\end{itemize}
+The error above has level ERROR so the TSD Agent is not able to perform some function.
+\bigbreak\noindent
+It appears as if some objects cannot serialized by the python json module after some investigation. A possible fix to this problem is removing all the debug logging statements from the files in the cassandra python driver. However, this would take a great deal of time as there are many of them. Also, these logging statements are likely needed in case another problem arises. As mentioned from the log statements, on line \texttt{1100} of \texttt{cassandra.connection.py}, the following debug log statement exists:
+\begin{verbatim}
+log.debug("Sending options message heartbeat on idle connection (%s) %s",
+                 id(connection), connection.endpoint)
+\end{verbatim}
+
+\labday{Tuesday, July 30, 2019}
+In the lab, I found that the verision of the Datastax python driver used by the previous senior project group is different and only logs host names to the file rather than objects of classes defined inside the connection file. Today, I will meet with Dr. Miah to work on resolving this issue. While working on testing the motor interface I found that the power supply is not working properly. It fails to turn on immediately when the \texttt{XBEEcontrol.py} script is run with the argument \texttt{turnOnMotor}. A potential cause is the lack of a flyback diode across the input terminals to the motor which could be damaging the power supply due to voltage spikes.
+
+In the meantime, before the meeting, I will work on trying to add plugload chart onto the motor page. Even though I am able to control the motor with the switch and identify device button, none of the data is added to the database. Something to note is that each table in BEMOSS is named according to the \texttt{agent\_id}. Somewhere in the repository these tables are added to the database; however, it is unclear where that occurs. According to the BEMOSS-Data-Management section of the developer resources: "During operation, the device agents connect to the Cassandra node on the same machine the agent is running, using Cassandra python driver, and writes time series data to a unique table named after the device\_id it is controlling."
+
+After the meeting with Dr. Miah, it was determined that the current bug involving the cassandra python driver is a top priority. No paper will be submitted if this current issue still exists. A print statement was added on lines $133$ and $139$ of the TSDAgent source code: \texttt{print(message)}. One of the messages logged to the \texttt{volttron.log} file is 
+\begin{verbatim}
+{u'tablename': u'platform_event', u'all_vars': 
+{u'event_id': u'155df44e-e45b-4271-bc44-ce053509d22a', u'start_time': 
+u'2019-07-31 04:37:42:936113*None', u'date_id': u'2019-07-30', u'agent_id': 
+u'platformmonitoragent_Node1', u'end_time': u'2019-07-31 
+04:38:44:552121*None'}, u'log_vars': 
+{u'event_id': u'UUID', u'start_time': u'TIMESTAMP', u'date_id': u'text', 
+u'agent_id': u'text', u'end_time': u'TIMESTAMP'}}
+\end{verbatim}
+ 
+\labday{Wednesday, July 31, 2019}
+This morning I checked the version of the cassandra-driver for python on the current machine. It is $3.18.0$ and the version on Bob's machine is $3.16.0.$ Also, after commenting out lines $135$ and $141$ in \texttt{Agents/TSDAgent/TSD/agent.py}, the same logging error was reported to the volttron log file. Thus, the function \texttt{do\_insertion\_jobs} is not the only problem rather also the \texttt{insert} and \texttt{customInsert} functions. In all, the cause of this problem will be very difficult to find as there are likely many calls to methods in the cassandra-driver package. In addition, another error is reported involving the VOLTTRON bacnet proxy agent when my machine is connected to both Wi-Fi and Ethernet. This problem is resolved if the host computer is only connected to the ECE-Robotics 1 network when running BEMOSS. A screencap is posted below.
+\begin{figure}[h]
+\center
+\includegraphics[scale=0.3]{figs/bacnetAgentError.png}
+\end{figure}
+A attempt to correct the error was made by cloning BEMOSS into a new repository and ensuring the version $3.16.0$ was installed rather than the latest $3.18.0$. Next time, however, I need to dig deeper into the issue and understand it rather than use the "hack it until it works method". Due to time constraints, I used this method instead. The TSD agent errors were no longer present; however, another possible unrelated error was thrown by the network agent:
+\begin{Verbatim}[tabsize=4]
+Traceback (most recent call last):
+  File "/home/ramgroup/tests/BEMOSS3.5/volttron/platform/
+  vip/agent/subsystems/rpc.py", line 168, in method
+    return method(*args, **kwargs)
+  File "/home/ramgroup/tests/BEMOSS3.5/volttron/platform/vip/
+  agent/subsystems/pubsub.py", line 262, in _peer_push
+    callback(peer, sender, bus, topic, headers, message)
+  File "/home/ramgroup/.volttron/agents/
+  90ab11e3-bdb4-45e7-95c7-c3cbf682b92b/networkagent-0.1/network/agent.py", 
+  line 222, in on_match_change
+    self.curcon.commit()
+  File "/home/ramgroup/tests/BEMOSS3.5/
+  bemoss_lib/utils/db_helper.py", line 82, in reconnect
+    return func(*args,**kwargs)
+  File "/home/ramgroup/tests/BEMOSS3.5/
+  bemoss_lib/utils/db_helper.py", line 109, in commit
+    return self.con.commit()
+IntegrityError: insert or update on table "node_device" 
+violates foreign key constraint 
+"node_device_assigned_node_id_cba9785e_fk_node_info_node_id"
+DETAIL:  Key (assigned_node_id)=(0) is not present 
+in table "node_info"
+\end{Verbatim}
+Unfortunately, as time went on the errors involving the TSD agent appeared again. At this point I have very little idea what is causing the issue. I do have a theory that the replaced URL is causing problems. So I will run a few tests:
+\begin{enumerate}
+\item Run BEMOSS with resource from old link (\texttt{dsc-cassandra-3.0.9-bin.tar.gz}) with cassandra-driver $3.16.0$ on ramgroup laptop
+\item Run BEMOSS with resource from old link (\texttt{dsc-cassandra-3.0.9-bin.tar.gz}) with cassandra-driver $3.18.0$ on ramgroup laptop
+\end{enumerate}
+Number 1 could not be done as the cassandra directory cannot simply be transferred from one BEMOSS directory to another when installing. After performing 2, the same TSD agent errors occurred leading me to strongly believe that this has something to do with the python cassandra driver. I will run BEMOSS again with the new link and cassandra-driver $3.16.0$. The version of the cassandra-driver packaged is changed with the command \texttt{pip install cassandra-driver==version} after running the command \texttt{. env/bin/activate} to run the previous command in the BEMOSS virtual environment. After further testing I found that errors will be thrown by the time-series database agent with the cassandra-driver $3.16.0$ only when BEMOSS run is run for the first time. 
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
