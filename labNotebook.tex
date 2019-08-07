@@ -808,7 +808,40 @@ Unfortunately, as time went on the errors involving the TSD agent appeared again
 \item Run BEMOSS with resource from old link (\texttt{dsc-cassandra-3.0.9-bin.tar.gz}) with cassandra-driver $3.16.0$ on ramgroup laptop
 \item Run BEMOSS with resource from old link (\texttt{dsc-cassandra-3.0.9-bin.tar.gz}) with cassandra-driver $3.18.0$ on ramgroup laptop
 \end{enumerate}
-Number 1 could not be done as the cassandra directory cannot simply be transferred from one BEMOSS directory to another when installing. After performing 2, the same TSD agent errors occurred leading me to strongly believe that this has something to do with the python cassandra driver. I will run BEMOSS again with the new link and cassandra-driver $3.16.0$. The version of the cassandra-driver packaged is changed with the command \texttt{pip install cassandra-driver==version} after running the command \texttt{. env/bin/activate} to run the previous command in the BEMOSS virtual environment. After further testing I found that errors will be thrown by the time-series database agent with the cassandra-driver $3.16.0$ only when BEMOSS run is run for the first time. 
+Number 1 could not be done as the cassandra directory cannot simply be transferred from one BEMOSS directory to another when installing. After performing 2, the same TSD agent errors occurred leading me to strongly believe that this has something to do with the python cassandra driver. I will run BEMOSS again with the new link and cassandra-driver $3.16.0$. The version of the cassandra-driver packaged is changed with the command \texttt{pip install cassandra-driver==version} after running the command \texttt{. env/bin/activate} to run the previous command in the BEMOSS virtual environment. After further testing I found that errors will be thrown by the time-series database agent with the cassandra-driver $3.16.0$ only when BEMOSS run is run for the first time.
+
+\labday{Thursday, August 1, 2019}
+On line 2852 of cluster.py:
+\begin{verbatim}
+log.debug("[control connection] Opening new connection to %s", host)
+\end{verbatim}
+After emailing Ashraf, the problem found yesterday is not an error as BEMOSS initializes some parameters when run the first time. So, once running the problems disappear. No more work needs to be done on this issues. The July 31 deadline was not successfully for the fully functional motor interface as the statistics chart for the motor did not appear aftre identifying and controlling the motor although the chart did appear one time.
+\bigbreak\noindent
+I spent some time learning about VOLTTRON on \url{https://volttron.readthedocs.io}
+
+\labday{Friday, August 2, 2019}
+The presentation was practiced today and a few additions were made. After reading a section on Agent mobility on the VOLTTRON documentation, I decided that I would like to implement ssh key host authentication to remove the password inconvenience of controlling the raspberry pi. Running the command 
+\begin{verbatim}
+ls .ssh
+\end{verbatim}
+showed only the file \texttt{known\_hosts} so no private or public keys had been generated previously. Then the command
+\begin{verbatim}
+ssh-keygen
+\end{verbatim}
+was run and the keys were placed into the \texttt{\textasciitilde/.ssh} directory. Lastly, the command \texttt{ssh-copy-id pi@192.168.1.41} was executed to send the public key generated on the BEMOSS host machine to the RPi. A login was prompted for and the system password of the ramgroup machine was entered. After this the process was succesfully completed. Now by simply running the command \texttt{ssh pi@<IP-ADDRESS>} commands can be executed. This was followed from the tutorial at \\
+\url{https://www.raspberrypi.org/documentation/remote-access/ssh/passwordless.md}\\
+
+\labday{Monday, August 5, 2019}
+Research was done on the publish subscribe model that volttron uses to communicate between agents. Publishers (analogous to server entities) publish topics to a message queue which are then subscribed to by subscribers (analagous to clients). A subscriber can subscribe to multiple publishers and a publisher can publish to multiple subscribers. The intention was to have a Skype meeting with Ashraf at 7:00 pm cst today, but the call was never made; thus, another day much be chosen for working on completing the interface.
+\begin{figure}
+\includegraphics[scale=0.45]{figs/figure9_ipe.eps}
+\end{figure}
+
+\labday{Tuesday, August 6, 2019}
+
+\labday{Wednesday, August 7, 2019}
+
+
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
