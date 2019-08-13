@@ -833,15 +833,80 @@ was run and the keys were placed into the \texttt{\textasciitilde/.ssh} director
 
 \labday{Monday, August 5, 2019}
 Research was done on the publish subscribe model that volttron uses to communicate between agents. Publishers (analogous to server entities) publish topics to a message queue which are then subscribed to by subscribers (analagous to clients). A subscriber can subscribe to multiple publishers and a publisher can publish to multiple subscribers. The intention was to have a Skype meeting with Ashraf at 7:00 pm cst today, but the call was never made; thus, another day much be chosen for working on completing the interface.
-\begin{figure}
-\includegraphics[scale=0.45]{figs/figure9_ipe.eps}
-\end{figure}
 
 \labday{Tuesday, August 6, 2019}
 
 \labday{Wednesday, August 7, 2019}
+Ubuntu 16.04 was reinstalled on the ramgroup laptop due to some package issues after attempting to install octave via the command line. The section 3 Example 2: Smart Appliance Scheduling was read in \cite{ch05dynamicprogramming}. The optimal time to run a six-cycle dishwasher between $17:00$ and $24:00$ was analyzed with an electricity price that changes over time. The goal is to minimize
+\[
+	\sum_{k=0}^{N-1}\frac{1}{4}c_{k} p(x_k+u_k)u_k	
+\]
+where $c_k$ is the electricity cost in USD/kWh, k refers to each $15$ minute time period, $N$ is the final period, $p(x_k+u_k)$ is the power required by cycle $x_{k+1}=x_k+u_k$, and $u_k \in \{0,1\}$ is the control variable determing whether the dishwasher should maintain its cycle or move to the next cycle.
+\bigbreak\noindent
+Next Monday, I will have a meeting with Ashraf about adding the new device API.
 
+\labday{Thursday, August 8, 2019}
+The principle of optimality can be expressed as the equation $V_k(x_k)$ or the cost-to-go from time index $k$ to $N$. In this problem example, the equation is
+\[ 
+	V_k(x_k)=min\left\{V_{k+1}(x_k), \frac{1}{4}c_kp(x_k+1)+V_{k+1}(x_k+1)\right\}
+\]
+In other words, a decision must be made whether to continue with the last state or continue to the next state depending on which option is cheaper. Overall, conclusions were made about when the cycles of the dishwasher should be started according to when the electricity cost $c_k$ is lowest in the given time frame. This concept can be extended to really any stateful device that uses energy in a building. Using real power cost statistics from the web, this algorithm could be implemented within BEMOSS.
 
+\labday{Friday, August 9, 2019}
+While reading the article \cite{khamphanchai2015}, some interesting facts were discovered about BEMOSS. One is that lighting loads, plug load, and hvac controllers account for almost 75\% of loads in small and medium sized buildings. In the research going forward, it would be ideal to focus efforts on implementing one of these types of devices as they have the most relevance. Section IV A. discusses the agent architecture. In a path of control agent execution, the following steps are followed:
+\begin{enumerate}
+\item Obtain the configuration for the agent which contains the agent id, agent message pub/sub address
+\item Instantiate a new device API object for communicating, monitoring and controlling the device
+\item Setup variables and connect with databases (time-series and metadata)
+\item Monitor the status of the device with device monitor agent behavior
+\item After receiving a message from the UI, one of the behaviors (UpdateDeviceStatus, DeviceControl, IdentifyDevice) is triggered
+\end{enumerate}
+Periodically, the control agent will update its knowledge on what is knows about a device based on the setup monitoring period. The identify device behavior is for identification of a device according to its corresponding control agent. Section IV E. discusses application development. The process involves many different steps. Different examples of applications are demand response, price-based management, and load control based on local conditions. It may be interesting to implement the dynamic programming algorithm that was mentioned in the previous lab notebook entry by using demand response signals (OpenADR) from the cloud. As mentioned before, I would like to implement another either lighting, plugload or hvac controller.  At first, I thought of adding a wifi enabled dimmer switch but this has actually been already added (WeMo dimmer). This was realized after looking in the script \texttt{BaseAPI\_WeMo.py}. Official support has not been added yet for the device as seen on the supported device table on \url{www.bemoss.org}. Other options will need to be researched then.
+\bigbreak\noindent
+A test was made to isolate the issue of the chart not appearing by configuring the motor as a plugload and running BEMOSS. The chart appeared normally. 
+
+\labday{Monday, August 12, 2019}
+After the meeting with Ashraf, it was concluded that I must find how to add the new device type to BEMOSS alone as this is an open-source project and the development team only supports lighting, HVAC, and plugload controllers. In \texttt{bemoss\_install\_v3.5.sh}, on line $62$, the \texttt{defaultDB.py} program is run which is where the device types are added to the PostgreSQL database:
+\begin{verbatim}
+python Web_Server/run/defaultDB.py
+\end{verbatim}
+A copy of \texttt{charts\_plugload.html} was added to the directory\\ 
+\texttt{PROJECT\_DIR/Web\_Server/webapps/charts/templates/charts} and renamed to \texttt{charts\_motor.html}. In addition, a directory named motor was added in the directory\\
+ \texttt{PROJECT\_DIR/Web\_Server/webapps/device/templates}. Inside the motor directory, a copy of the \texttt{plugload.html} file was added and renamed to \texttt{motor.html}. The webapp html template \texttt{manual\_discovery.html} was modified by copying lines $192$ to $213$ and pasting them below the lines for the plug load controllers. Then, line $57$ of\\
+\texttt{PROJECT\_DIR/Web\_Server/webapps/discovery/views.py} was changed to 
+\begin{verbatim}
+motors = SupportedDevices.objects.filter(device_type_id=5)
+\end{verbatim}
+and line 71 was changed to 
+\begin{verbatim}
+devices = {'hvac': hvac, 'lt_loads':lt_loads,
+ 'plugloads':plugloads, 'sensors':sensors, 'motors':motors}
+\end{verbatim}
+With these changes, BEMOSS was restarted and tested. Then in the \texttt{API\_info} method in the \texttt{API\_motor.py} script, the device type id of the motor was set to 5.
+\bigbreak\noindent
+Another issue appeared when no device appeared on the list supported devices on the discovery page. This was resolved by updating the html in the \texttt{manual\_discovery.html} file for the motor widget.
+\bigbreak\noindent
+I found another error when discovering the pittman motor. The device discovery agent receives an empty message when it subscribes to the message sent by the manual discovery views function \texttt{discover\_new\_devices}. This was fixed after making further changes to the django template code in \texttt{manual\_discovery.html}.
+\bigbreak\noindent
+Now the goal is to fix the chart issue. Some research was done in the file\\
+\texttt{PROJECT\_DIR/Web\_Server/webapps/charts/views.py}. 
+Print statements were added in the \texttt{returnChartsPage} to check if some sort of exception is being thrown. In the file \texttt{charts\_plugload.js} on line 80, a TypeError is thrown in the firefox developer console on the statistics page for the motor:
+\begin{verbatim}
+TypeError: _status[0] is undefined
+\end{verbatim}
+This is the problematic javascript object:
+\begin{verbatim}
+axes: {
+			      xaxis: {
+			        label: "Time",
+			        renderer: $.jqplot.DateAxisRenderer,
+			        tickOptions:{formatString:'%m/%d, %H:%M'},
+
+		            min : _status[0][0],
+		            max: _status[_status.length-1][0]
+			      }
+\end{verbatim}
+To test whether this is the cause of the problem I will change the \texttt{device\_type\_id} of the motor back to $3$ corresponding to plugload as the chart appears when the device is set as a plugload. If the error is not shown in the console, then this must be the problem. The \texttt{\_status} variable is defined in \texttt{charts\_plugload.js} as \texttt{\_status = \{\{ status|safe|list\_if\_none \}\};} A \texttt{console.log} statement was added to determine the value of \texttt{\_status}. The \texttt{status} variable is a key in the dictionary \texttt{data\_dict} rendered to the page by the \texttt{charts/view.py} file by the function \texttt{returnChartsPage}. The value corresponding to \texttt{'status'} is an empty list which is the source of the issue. Tomorrow in the lab, I will check this dictionary when controlling the wemo insight switch. 
 \end{addmargin}
 
 %----------------------------------------------------------------------------------------
