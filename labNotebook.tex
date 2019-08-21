@@ -906,9 +906,156 @@ axes: {
 		            max: _status[_status.length-1][0]
 			      }
 \end{verbatim}
-To test whether this is the cause of the problem I will change the \texttt{device\_type\_id} of the motor back to $3$ corresponding to plugload as the chart appears when the device is set as a plugload. If the error is not shown in the console, then this must be the problem. The \texttt{\_status} variable is defined in \texttt{charts\_plugload.js} as \texttt{\_status = \{\{ status|safe|list\_if\_none \}\};} A \texttt{console.log} statement was added to determine the value of \texttt{\_status}. The \texttt{status} variable is a key in the dictionary \texttt{data\_dict} rendered to the page by the \texttt{charts/view.py} file by the function \texttt{returnChartsPage}. The value corresponding to \texttt{'status'} is an empty list which is the source of the issue. Tomorrow in the lab, I will check this dictionary when controlling the wemo insight switch. 
-\end{addmargin}
+To test whether this is the cause of the problem I will change the \texttt{device\_type\_id} of the motor back to $3$ corresponding to plugload as the chart appears when the device is set as a plugload. If the error is not shown in the console, then this must be the problem. The \texttt{\_status} variable is defined in \texttt{charts\_plugload.js} as \texttt{\_status = \{\{ status|safe|list\_if\_none \}\};} A \texttt{console.log} statement was added to determine the value of \texttt{\_status}. The \texttt{status} variable is a key in the dictionary \texttt{data\_dict} rendered to the page by the \texttt{charts/view.py} file by the function \texttt{returnChartsPage}. The value corresponding to \texttt{'status'} is an empty list which is the source of the issue. Tomorrow in the lab, I will check this dictionary when controlling the wemo insight switch.
 
+\labday{Tuesday, August 13, 2019}
+The result set printed to the terminal for the insight switch was similar to that printed for the motor other than the power variable. This is the variable list and result set used in the \texttt{returnChartsPage} function for the motor:
+\begin{verbatim}
+variable list:
+[u'agent_id', u'date_id', u'status', u'time', u'user']
+result set:
+[[u'GM82_b827ebbfbade' u'2019-08-13' u'None' 1565704113458
+  u'device_monitor']
+ [u'GM82_b827ebbfbade' u'2019-08-13' 0 1565704188459 u'Admin_']]
+\end{verbatim}
+Also, this is the data dictionary rendered to the charts page by the \texttt{returnChartsPage} function:
+\begin{verbatim}
+{u'status': [], 'mac': u'b827ebbfbade', 'nickname': u'Plugload2', 
+'node_name': u'Node1'}
+\end{verbatim}
+For the Insight switch, the variable list and result set are:
+\begin{verbatim}
+variable list:
+[u'agent_id', u'date_id', u'power', u'status', u'time', u'user']
+result set:
+[[u'Insi_231707K120123A' u'2019-08-13' 0.0 0 1565703938458
+  u'device_monitor']
+ [u'Insi_231707K120123A' u'2019-08-13' None 1 1565703963458 u'Admin_']
+ [u'Insi_231707K120123A' u'2019-08-13' None 0 1565703968466 u'Admin_']]
+\end{verbatim}
+The data dictionaries are:
+\begin{verbatim}
+{u'status': [[1565703938458.0, 0.0], [1565703963457.0, 0.0], 
+[1565703963458.0, 1.0], [1565703968465.0, 1.0], [1565703968466.0, 0.0], 
+[1565704485071.0, 0.0]], 'mac': u'231707K120123A', 
+'nickname': u'Plugload1', 'node_name': u'Node1'}
+{u'status': [[1565703938458.0, 0.0], [1565703963457.0, 0.0], [1565703963458.0, 1.0], 
+[1565703968465.0, 1.0], [1565703968466.0, 0.0], [1565704485071.0, 0.0]], 
+'mac': u'231707K120123A', 'nickname': u'Plugload1', u'power': 
+[[1565703938458.0, 0.0], [1565704485071.0, 0.0]], 
+'node_name': u'Node1'}
+\end{verbatim}
+One difference noticed is that for all lists in the result set the status is set to \texttt{None} when the user is \texttt{Admin\_} for the motor. In the \texttt{parse\_resultset} function, the line
+\begin{verbatim}
+x = [[lst[variables.index('time')], 
+lst[variables.index(data_point)]+0.0]s
+                for lst in result_set 
+                if lst[variables.index(data_point)] is not None]
+\end{verbatim}
+will not return a list for each list in \texttt{result\_set} if the value of \texttt{status} is \texttt{None}. However, some values should still be returned as the value of \texttt{status} is not \texttt{None} when the user is \texttt{Admin\_}.
+\bigbreak\noindent
+The reason why \texttt{parse\_resultset} is returning an empty list is the line
+\begin{verbatim}
+if len(result_set)>0 and type(result_set[0][variables.index(data_point)]) 
+in [str,unicode]:
+	return []
+\end{verbatim}
+From the \texttt{result\_set} shown above,\\ 
+\texttt{result\_set[0][variables.index('status')] = u'None'} which is a unicode string thus the \texttt{parse\_resultset} function is returning an empty list. The next step I took in solving this issue is by looking in the motor api code. Since the WeMo insight switch is working perfectly, there is likely a problem with the API code I wrote for the motor. I may need to compare the two device API's to see if there  are any differences. As a test I commented out the conditional statement mentioned above. This did not appear to fix the problem. From the looking at the \texttt{result\_set} data, once BEMOSS is started the new \texttt{status} values are not \texttt{u'Null'}. The \texttt{u'Null'} values were likely saved in the table when there was a mistake in the motor api code. The data in this table is still present upon restart, so a way must be found to delete the data in the table. First, I will I try to change the device type to motor rather than plugload.
+\bigbreak\noindent
+The \texttt{cassandraDB.py} file contains a function named \texttt{delete} that is able to drop a table in the cassandra database. It takes a single argument, the agent id corresponding to the table to be dropped. When I called this function within a python interpreter in the \texttt{PROJECT\_DIR/bemoss\_lib/databases/cassandraAPI/} directory, errors were thrown but the operation seemed to complete sucessfully. There seems to be some problem with this function as \texttt{startDate} and \texttt{endDate} were not specified but errors were thrown by the pandas module although they are not required. However, the table was still deleted even when these parameters were not specified. After restarting BEMOSS with tables not present in the cassandra database, the chart appeared successfully on the statistics page. Lastly, another issue still exists on the dashboard discovery page. When I press the "Set all to 'Approved'" button, the device \texttt{Approval status} does not update. In \texttt{PROJECT\_DIR/Web\_Server/static/app\_js/discovery.js},  the following code was added on lines $321$ to $324$: 
+\begin{verbatim}
+    $("#set_approve_Motor").click(function(e)) {
+        e.preventDefault();
+        $(".app_stat_Motor").text("Approved");
+    }
+\end{verbatim}
+The \texttt{event.preventDefault} method will prevent the default action from being triggered and will not reload the page. This problem was not solved by performing the above action. After pressing the \texttt{Save Change to Motor Controllers} button, a popup is generated by firefox: 
+\bigbreak\noindent
+To display this page, Firefox must send information that will repeat any action (such as a search or order confirmation) that was performed earlier.
+\bigbreak\noindent
+This issue was resolved by changing parenthesis and brackets of the above code as follows:
+\begin{verbatim}
+    $("#set_approve_Motor").click(function(e) {
+        e.preventDefault();
+        $(".app_stat_Motor").text("Approved");
+    });
+\end{verbatim}
+
+\labday{Wednesday, August 14, 2019}
+In a short meeting with Dr. Miah, we discussed issues with the motor. He found that something is shorting out causing the power supply to overload. This was quickly fixed by reinserting the twisted pair of wires into the screw terminals of the h-bridge driver.
+\bigbreak\noindent
+Another issue with the software is when a plugload controller is discovered after discovering the motor, the nickname of the plugload controller (for example insight switch) is \texttt{plugload2} rather than \texttt{plugload1}. A likely reason is no changes were made to the html template after copying the plugload template and renaming to \texttt{motor.html}. After looking through the device discovery agent code, in the  \texttt{DiscoveryAgent} constructor \texttt{self.device\_num} is set to the number of devices discovered by the device discovery agent. Once a new device is discovered, in the \texttt{findDevices} method, the \texttt{self.device\_num} variable is incremented, so the number after the device type refers to the total number of devices that have been discovered rather than the number of devices of the specific type that have been discovered. Later work was done on the presentation here are the topics:
+\begin{itemize}
+	\item API translator discussion
+	\item Adding a device API translator
+	\item Adding a new device type
+	\item Problems fixed
+	\item Additions
+	\item Priorities
+\end{itemize}
+
+\labday{Thursday, August 15, 2019}
+
+\labday{Friday, August 16, 2019}
+
+\labday{Monday, August 19, 2019}
+In the lab, when demonstrating the motor interface to Dr. Miah, the scheduling for the motor type has not been implemented. For now, this is fine as I do not have time at the moment. Later this could be useful in scheduling the motor to turn on based on responses from the grid. During the filming of a video demonstration of the progress I have made so far, the number displaying the number of discovered devices in the discover/manage tab appears to be incorrect when both the insight switch and motor are discovered (i.e. 1 is displayed when both devices are discovered rather than 2). One of the Python files likely does not contain code for the motor controller. This is the django template code used to display the number of devices next to the label of the tab:
+\begin{verbatim}
+	{% get_value_with_default device_count 'PND' 'all' 'all' 0 %}
+\end{verbatim} 
+Arguments \texttt{device\_count}, 'PND', 'all', 'all', and 0 are passed as arguments into the template tag \texttt{get\_value\_with\_default}. However, I do not know where \texttt{device\_count} is defined. \texttt{device\_count} is a dictionary returning the number of devices under each approval status such as pending, approved, or non-bemoss device.
+
+\labday{Tuesday, August 20, 2019}
+Today, I will document the full procedure for adding the motor to BEMOSS. Note \texttt{PROJECT\_DIR} refers to the directory containing the installation of BEMOSS. For example, \texttt{\textasciitilde/BEMOSS3.5}.
+\begin{enumerate}
+\item Add the files \texttt{BaseAPI\_RPi.py} and \texttt{API\_Motor.py} to the directory \texttt{research} in the BEMOSS project directory. These are available on the Google Drive BEMOSS-Brian2019
+\item In the file \texttt{PROJECT\_DIR/bemoss\_lib/utils/platform\_initiator.py}, replace the line \texttt{APImodule = importlib.import\_module("DeviceAPI."+file)} on line 247 with 
+\begin{Verbatim}[tabsize=4]
+try:
+	APImodule = importlib.import_module("DeviceAPI."+file)
+except Exception as er:
+	APImodule = importlib.import_module("research."+file)
+\end{Verbatim}
+This will allow the platform initiator to search both the \texttt{PROJECT\_DIR/DeviceAPI} and \texttt{PROJECT\_DIR/research} directories for device API files.
+\item In the discovery agent code\\
+\texttt{PROJECT\_DIR/Agents/DeviceDiscoveryAgent/devicediscovery/agent.py},\\
+on line 167, replace \texttt{apiLib = importlib.import\_module("DeviceAPI."+self.api)} with
+\begin{Verbatim}[tabsize = 4]
+try:
+	APImodule = importlib.import_module("DeviceAPI."+file)
+except Exception as er:
+	APImodule = importlib.import_module("research."+file)
+\end{Verbatim}
+to allow the basic agent to search both directories \texttt{PROJECT\_DIR/DeviceAPI} and \texttt{PROJECT\_DIR/research} for device AIP files.
+
+\item Update the python script\\
+\texttt{PROJECT\_DIR/Web\_Server/run/defaultDB.py} with the line 
+\begin{verbatim}
+dt5 = DeviceType(id=5, device_type='Motor')
+dt5.save()
+\end{verbatim}
+to register the device type \texttt{Motor} in the BEMOSS database.
+\item Update the html template\\
+\texttt{PROJECT\_DIR/BEMOSS3.5/Web\_Server/webapps/discovery/\\
+templates/discovery/manual\_discovery.html},\\
+by copying the html for the plugload widget and pasting below to create a widget for motors on the manual discovery page. Then replace the variables \texttt{plugloads} with \texttt{motors} and \texttt{eachpl} with  \texttt{eachmot} in the copied html.
+
+\item Update the django view\\
+\texttt{PROJECT\_DIR/Web\_Server/webapps/discovery/views.py} by replacing \texttt{power\_meters} with \texttt{motors} on line 58 as such
+\begin{verbatim}
+motors = SupportedDevices.objects.filter(device_type_id=5)
+\end{verbatim}
+On line $70$ of the file, add the key value pair \texttt{'motors': motors} to the \texttt{devices} dictionary that is rendered to the \texttt{manual\_discovery.html} file.
+
+\item In the directory, \texttt{PROJECT\_DIR/Web\_Server/webapps/device/templates} copy the directory \texttt{motor} and rename to \texttt{motor} and rename the html template \texttt{plugload.html} to \texttt{motor.html}.
+
+\item In the directory, \texttt{PROJECT\_DIR/Web\_Server/webapps/charts\\
+/templates/charts/} copy the file \texttt{charts\_plugload.html} into the directory and rename the file to \texttt{motor.html}.
+
+Note: other steps will likely be required here due to the bug regarding the number of devices.
+\end{enumerate}
+\end{addmargin}
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
@@ -937,4 +1084,4 @@ To test whether this is the cause of the problem I will change the \texttt{devic
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: t
-%%% End
+%%% End}
