@@ -1052,13 +1052,82 @@ On line $70$ of the file, add the key value pair \texttt{'motors': motors} to th
 
 \item In the directory, \texttt{PROJECT\_DIR/Web\_Server/webapps/charts\\
 /templates/charts/} copy the file \texttt{charts\_plugload.html} into the directory and rename the file to \texttt{motor.html}.
+\end{enumerate}
 
 Note: other steps will likely be required here due to the bug regarding the number of devices.
-\end{enumerate}
-\end{addmargin}
+
+\labday{Wednesday, August 21, 2019}
+As a continuation of yesterday, further code must be added to the file
+\begin{verbatim}
+PROJECT_DIR/Web_Server/static/app_js/manual_disc.js
+\end{verbatim}
+I have almost no knowledge of javascript and thus jQuery, so I do not understand this code.
+
+The lines 
+\begin{verbatim}
+$(".eq_height_mot").height(ht);
+\end{verbatim}
+and 
+\begin{verbatim}
+    $("#mot_all").change(function() {
+        if($(this).is(":checked")) {
+            $("input[id^=mot_]").prop('checked', true);
+        } else {
+            $("input[id^=mot_]").prop('checked', false);
+        }
+    });
+\end{verbatim}
+must be added. Also, the expression
+\begin{verbatim}
+!(current_id == "mot_all")
+\end{verbatim} 
+must be added to line $189$ of \texttt{manual\_disc.js}.
+\bigbreak\noindent
+I will likely need to make a pdf file with these steps and place them in the Google Drive for better accessibility. 
+\bigbreak\noindent
+Since the RPi was automatically connecting to BUGuest, I found a tutorial online to forget the saved wifi network. By using the command,
+\begin{verbatim}
+sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+\end{verbatim}
+the wifi network corresponding to BUGuest was deleted including the name and network block. Hopefully, this will prevent the Pi from connecting to BUGuest and only connect to ECE-Robotics$1$.
+\bigbreak\noindent
+I found another error in the software. When clicking on the "Delete Data" button in the BEMOSS advanced settings in the advanced settings GUI, this exception is thrown:
+\medbreak
+\begin{verbatim}
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/lib-tk/Tkinter.py", line 1540, in __call__
+    return self.func(*args)
+  File "GUI.py", line 385, in del_dat
+    shutil.rmtree(cas_data_dir)
+  File "/usr/lib/python2.7/shutil.py", line 239, in rmtree
+    onerror(os.listdir, path, sys.exc_info())
+  File "/usr/lib/python2.7/shutil.py", line 237, in rmtree
+    names = os.listdir(path)
+OSError: [Errno 2] No such file or directory: 
+'/home/ramgroup/BEMOSS3.5/cassandra/data'
+\end{verbatim}
+The data directory is not present in the cassandra directory. For now, to delete the data from the database, I will simply just remove the table by using the function call:
+\medbreak
+\begin{verbatim}
+cassandraDB.delete(agent_id)
+\end{verbatim}
+where \texttt{agent\_id} is the \texttt{agent\_id} corresponding to the cassandra database table.
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
+\labday{Thursday, August 22, 2019}
+While researching sources for the paper, I found this source \footnote{\url{https://lucidconnects.com/library/blog/electricity-demand-vs-consumption}} to help me understand a little more terminology used in this project:
+\begin{itemize}
+\item Peak demand - highest average demand during a $15$ period in the utility cycle
+\item Time-of-use pricing - electricity rate is charged based on the time of day
+\end{itemize}
+
+\labday{Friday, August 24, 2019}
+A current challenge that I am facing is finding an article that discusses the vast number of electrical devices in the world such as electric vehicles, smart phones, computers, and other electrical appliances. One source I found was from the IEC - International Electrotechnical Commission.  
+
+\labday{Friday, August 30, 2019}
+
+\end{addmargin}
 
 
 \bibliographystyle{plain}
