@@ -77,11 +77,11 @@
 \usepackage{etoolbox}
 \usepackage[norule]{footmisc} % Removes the horizontal rule from footnotes
 \usepackage{lastpage} % Counts the number of pages of the document
-
+\usepackage{float}
 \usepackage[dvipsnames]{xcolor}  % Allows the definition of hex colors
 \definecolor{titleblue}{rgb}{0.16,0.24,0.64} % Custom color for the title on the title page
 \definecolor{linkcolor}{rgb}{0,0,0.42} % Custom color for links - dark blue at the moment
-
+\usepackage{pgfgantt}
 \addtokomafont{title}{\Huge\color{titleblue}} % Titles in custom blue color
 \addtokomafont{chapter}{\color{OliveGreen}} % Lab dates in olive green
 \addtokomafont{section}{\color{Sepia}} % Sections in sepia
@@ -441,8 +441,76 @@ Right now, the platforms that were mentioned in the paper are fine. However, I d
 In the future, we are looking to build a mobile application rather than a web application for the purpose of building energy management. 
 \end{itemize}
  
-\end{addmargin}
+\labday{Tuesday, October 8, 2019}
+Today, Dr. Miah shared the news that the university cancelled funding for all internal grant award programs, so the proposal will not be submitted to the university for funding. Instead, now the focus will be brought back to working on adding the Kill A Watt meter to BEMOSS and implementing the DC motor speed control algorithm. By November 15, research for the Kill A Watt meter needs to be completed (i.e. need to determine what parts to purchase so that Mr. Mattus can purchase the materials). The speed control algorithm will be started on Dec 1 and continue through February 2020. The gantt charts for 2019 and 2020 detailing the work are shown below.
 
+\begin{figure}[H]
+%\begin{sidewaysfigure}
+    \begin{ganttchart}[hgrid,
+    vgrid={*4{black, dotted},*3{white},*1{black,
+    dotted},*3{white},*1{black, dotted},*3{white}},
+    group/.append style={draw=black, fill=yellow!50},
+    group left shift = 0,
+    group right shift = 0,
+    y unit title=.8cm,
+    %y unit chart=.8cm,
+    milestone label font=\tiny,
+    bar label font=\small, 
+    group label font=\small,
+    bar/.append style={draw=black,fill=blue},
+    bar left shift= 0,
+    bar right shift= 0,
+    bar height = .2]{1}{16}
+    \gantttitle{2019}{16}\\
+    \gantttitle{Sep}{4}
+    \gantttitle{Oct}{4}
+    \gantttitle{Nov}{4}
+    \gantttitle{Dec}{4}\\
+    % \ganttgroup{DC motor speed control algorithm}{5}{8}\\
+    \ganttgroup{Research new device}{5}{12}\\
+    \ganttbar{Research device}{5}{10}\\
+    \ganttbar{Implemention in BEMOSS}{11}{12}\\
+    \ganttgroup{DC motor speed control}{13}{15}\\
+    \ganttbar{Research algorithm}{13}{15}
+    \end{ganttchart}
+\caption{Gantt chart for Fall 2019}
+\label{gantt1}
+%\end{sidewaysfigure}
+\end{figure}
+\begin{figure}[H]
+%\begin{sidewaysfigure}
+    \begin{ganttchart}[hgrid,
+    vgrid={*4{black, dotted},*3{white},*1{black,
+    dotted},*3{white},*1{black, dotted},*3{white},*1{black,dotted},*3{white}},
+    group/.append style={draw=black, fill=yellow!50}, 
+    group left shift = 0,
+    group right shift = 0,    
+    y unit title=.8cm,
+    %y unit chart=.8cm,
+    milestone label font=\tiny,
+    bar label font=\small, 
+    group label font=\small,
+    bar/.append style={draw = black, fill=blue},
+    bar left shift= 0,
+    bar right shift= 0,
+    bar height = 0.2,
+    bar incomplete/.append style={fill=red}]{1}{20}
+    \gantttitle{2020}{20}\\
+    \gantttitle{Jan}{4}
+    \gantttitle{Feb}{4}
+    \gantttitle{Mar}{4}
+    \gantttitle{Apr}{4}
+    \gantttitle{May}{4}\\
+    \ganttgroup{DC motor speed control (cont.)}{2}{8}\\
+    \ganttbar{Implementation in BEMOSS}{2}{8}\\
+    \ganttgroup{Machine learning algorithm}{9}{18}\\
+    \end{ganttchart}
+\caption{Gantt chart for Spring 2020}
+\label{gantt1}
+%\end{sidewaysfigure}
+\end{figure}
+After a second meeting with Dr. Miah where I presented to him the information I found about the Kill A Watt meter(s), we decided against implementing the Kill A Watt meter as the whole motivation for adding it to BEMOSS is to wirelessly measure the electricity demand (W or kW) of electrical/electronic loads. I did not mention to him the fact that the WeMo Insight switch can already wirelessely measure this quantity and is fully supported by BEMOSS. Thus the the Kill A Watt would be unecessary. Instead, the plan is to use the existing switch to measure power consumption of a new IoT device that is not currently supported by BEMOSS. The charts above have been updated with this information.
+\end{addmargin}
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
@@ -464,7 +532,6 @@ In the future, we are looking to build a mobile application rather than a web ap
 % \end{thebibliography}
 
 %--------------------------------------------------------------------------------------
-
 \end{document}
 
 
