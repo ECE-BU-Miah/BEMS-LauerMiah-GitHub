@@ -1125,8 +1125,14 @@ While researching sources for the paper, I found this source \footnote{\url{http
 \labday{Friday, August 24, 2019}
 A current challenge that I am facing is finding an article that discusses the vast number of electrical devices in the world such as electric vehicles, smart phones, computers, and other electrical appliances. One source I found was from the IEC - International Electrotechnical Commission.  
 
-\labday{Friday, August 30, 2019}
-
+\labday{Tuesday, October 8, 2019}
+Some research was done on the kill a watt meter. The wireless version of the Kill A Watt meter - P$3$ $4250$ CO2 Wireless is no longer in stock. A brochure for this device can be found at the link \url{http://p3international.com/brochures/p4200.pdf}. Some of the features of this device include calculation of carbon emission and energy costs by day, week, month, and year. The software controlling the wireless display can be configured to take KWh data in combination with the type of electricity generation, coal, hydroelectric, nuclear. This device may be very difficult to implement as it uses a $916.5$ MHz wireless transmitter rather than a Wi-Fi interface as it is an outdated product. Additional hardware will be needed such as a receiver that can accept $916.5$ MHz frequencies. The data obtained from the receiver will then need to be sent to the RPi and then to BEMOSS over Wi-Fi. In all, this device may or may not be possible to implement within BEMOSS inside the given time frame which is from now until Dec $1$. Also, purchasing an outdated product that is not widely used is not advisable.
+\smallbreak\noindent
+On the other hand, the P$3$ P$4400$ Kill A Watt is widely available on many different sites; however, it is not a wireless device. Thus, some soldering will need to be done and work around AC mains voltage which I personally deem to be unsafe. Mr. Mattus will also not likely allow me to work with mains voltage in the lab unless I could find a more experienced person to perform hardware modifications to the Kill A Watt. Also, a second downside to implementing this non-wireless meter is the fact that Dr. Miah prefers working with a fully functional device rather than one requiring modification.
+\smallbreak\noindent
+In conclusion, I don't think that implementing either of these devices will work out as it will likely require more time than allocated to perform the task (two months). 
+\smallbreak\noindent
+In the meeting it was decided to work on implementing a new load whose power consumption will be monitored with the Insight Switch.
 \end{addmargin}
 
 
