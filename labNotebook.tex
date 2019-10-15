@@ -75,6 +75,7 @@
 \usepackage{amsmath} % For typesetting math
 \usepackage{graphicx} % Required for including images
 \usepackage{etoolbox}
+\usepackage{float}
 \usepackage[norule]{footmisc} % Removes the horizontal rule from footnotes
 \usepackage{lastpage} % Counts the number of pages of the document
 
@@ -1133,6 +1134,18 @@ On the other hand, the P$3$ P$4400$ Kill A Watt is widely available on many diff
 In conclusion, I don't think that implementing either of these devices will work out as it will likely require more time than allocated to perform the task (two months). 
 \smallbreak\noindent
 In the meeting it was decided to work on implementing a new load whose power consumption will be monitored with the Insight Switch.
+
+\labday{October 15, 2019}
+Today, new loads were researched on the Web. Some of the openHAB documentation was read over to find any loads that could be controlled over a LAN. One obvious one is computer/server as they tend to consume a lot of energy. From the url \url{https://www.openhab.org/docs/configuration/items.html}, under the section on multi binding/ channel linkage, interaction with an office pc is described. Network health and power consumption are monitored with a network health binding and wake-on-lan binding respectively.
+\smallbreak\noindent
+More research was done on the Wake-On-LAN networking standard on wikipedia (\url{https://en.wikipedia.org/wiki/Wake-on-LAN}). A network message may be sent to a computer to turn on or awaken the machine. The device sending the message must be connected to the same LAN as the target PC. To implement on a wireless network, wake on wireless LAN must be used. However, after some further searching WoWLAN appears to have some serious limitations compared to WoLAN. Lastly, a computer can be in 7 different power states which are listed in Figure~\ref{figs:powerstates}.
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{figs/machinestates.png}
+\caption{ACPI power states}
+\label{figs:powerstates}
+\end{figure} 
+With these states it may be possible to implement a dynamic programming algorithm to optimize the power consumption of the computer. However, I am not sure how to control these power states using the Wake on LAN, or if it is even possible.
 \end{addmargin}
 
 
