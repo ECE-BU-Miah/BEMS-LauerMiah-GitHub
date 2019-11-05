@@ -1141,11 +1141,94 @@ Today, new loads were researched on the Web. Some of the openHAB documentation w
 More research was done on the Wake-On-LAN networking standard on wikipedia (\url{https://en.wikipedia.org/wiki/Wake-on-LAN}). A network message may be sent to a computer to turn on or awaken the machine. The device sending the message must be connected to the same LAN as the target PC. To implement on a wireless network, wake on wireless LAN must be used. However, after some further searching WoWLAN appears to have some serious limitations compared to WoLAN. Lastly, a computer can be in 7 different power states which are listed in Figure~\ref{figs:powerstates}.
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.5]{figs/machinestates.png}
+\includegraphics[scale=0.4]{figs/machinestates.png}
 \caption{ACPI power states}
 \label{figs:powerstates}
 \end{figure} 
 With these states it may be possible to implement a dynamic programming algorithm to optimize the power consumption of the computer. However, I am not sure how to control these power states using the Wake on LAN, or if it is even possible.
+
+\labday{October 22, 2019}
+It was found that Wake On LAN is only able to wake computer from sleep or powered off state. Thus, more research will need to be done in order to find a way of controlling these states. At the url, \url{https://docs.microsoft.com/en-us/windows/win32/power/using-the-device-power-api?redirectedfrom=MSDN} I found some example c++ code of using the device power api on windows.
+
+\begin{Verbatim}[tabsize=4]
+#define _WIN32_WINNT 0x0600
+#include <Windows.h>
+#include <PowrProf.h>
+#include <stdio.h>
+#include <tchar.h>
+
+#pragma comment(lib, "PowrProf.lib")
+
+int __cdecl main()
+{
+ // Define and initialize our return variables.
+ LPWSTR  pRetBuf = NULL;
+ ULONG bufSize = MAX_PATH * sizeof(WCHAR);
+ ULONG uIndex = 0;
+ BOOLEAN bRet = FALSE;
+
+ // Open the device list, querying all devices
+ if (!DevicePowerOpen(0)) 
+  {
+   printf("ERROR: The device database failed to initialize.\n");
+   return FALSE;
+  }
+
+ // Enumerate the device list, searching for devices that support 
+ // waking from either the S1 or S2 sleep state and are currently 
+ // present in the system, and not devices that have drivers 
+ // installed but are not currently attached to the system, such as 
+ // in a laptop docking station.
+
+ pRetBuf = (LPWSTR)LocalAlloc(LPTR, bufSize);
+
+ while (NULL != pRetBuf && 
+        0 != (bRet = DevicePowerEnumDevices(uIndex,
+           DEVICEPOWER_FILTER_DEVICES_PRESENT,
+           PDCAP_WAKE_FROM_S1_SUPPORTED|PDCAP_WAKE_FROM_S2_SUPPORTED,
+           (PBYTE)pRetBuf,
+           &bufSize)))
+  {
+   printf("Device name: %S\n", pRetBuf);
+
+   // For the devices we found that have support for waking from 
+   // S1 and S2 sleep states, disable them from waking the system.
+   bRet = (0 != DevicePowerSetDeviceState((LPCWSTR)pRetBuf, 
+                                  DEVICEPOWER_CLEAR_WAKEENABLED, 
+                                  NULL));
+
+   if (0 != bRet) 
+    {
+     printf("Warning: Failed to set device state.\n");
+    }
+   uIndex++;
+  }
+
+ // Close the device list.
+ DevicePowerClose();
+ if (pRetBuf!= NULL) LocalFree(pRetBuf);
+ pRetBuf = NULL;
+
+ return TRUE;
+ if (pRetBuf!= NULL) LocalFree(pRetBuf);
+ pRetBuf = NULL;
+}
+\end{Verbatim}
+
+\labday{Tuesday, October 29, 2019}
+Because of the small amount of time to integrate the new device (around 1 month) while only working around 2 hours per week, a different device was chosen instead of Desktop PC/server. Also, many downsides to working with these devices were found. The major problem is that the wemo switch alone can already handle shutting down and turning on a computer (although in an unideal way via hard shutdown rather than through the operating system). Secondly, switching the pc to other power states than simply off or on such as sleep or hibernate may not be possible through the operating system or using IPMI, and one of the main original motivations for implementing the remote LAN power control technologies is to control the power states. However, in the future, wake-on-lan or possibly IPMI could be implemented.
+\smallbreak\noindent
+Thus, I decided to work on implementing a stepper motor to complement the DC motor worked on previously. Also, this project may be more interesting than simply turning on and off a computer remotely. The motor used is the 28BYJ-48 5V unipolar stepper motor. Some of the specs of the motor from the data sheet at \footnote{\url{https://download.mikroe.com/documents/datasheets/step-motor-5v-28byj48-datasheet.pdf}} include
+\begin{itemize}
+\item 4 phases
+\item 1/64 speed variation ratio
+\item 100 Hz frequency
+\item 5 V DC operating voltage
+\end{itemize}
+At the moment, my stepper motor knowledge is limited so programming the device will require a great deal of research.
+
+\labday{Tuesday, November 5, 2019}
+In addition to the stepper motor, a ULN2003A darlington transistor array is used to amplify the supply power. The IC is mounted on the ULN 2003 stepper motor driver board. I ran the python program provided in the Github repository \footnote{\url{https://github.com/Freenove/Freenove_Ultimate_Starter_Kit_for_Raspberry_Pi.git}}; and connected the stepper driver and power supply breakout board to the Raspberry GPIO extension board according to the wiring diagram provided in the file \texttt{Tutorial.pdf}. However, the stepper motor was not functioning at all and the LEDs on the driver board that indicate which coil is being powered were not lighting up. Also, the board became very hot to the touch when connected to the RPi and power supply module. A potential reason is the fact that a 12 V power adapter is used to power the power supply module rather than the likely recommended 5 V. A second reason is the differences between the RPi model 3 and 3B+ that I use personally. I will need to test the python script on my own raspberry Pi to see if this is the cause of any problems. 
 \end{addmargin}
 
 
