@@ -1229,11 +1229,36 @@ At the moment, my stepper motor knowledge is limited so programming the device w
 
 \labday{Tuesday, November 5, 2019}
 In addition to the stepper motor, a ULN2003A darlington transistor array is used to amplify the supply power. The IC is mounted on the ULN 2003 stepper motor driver board. I ran the python program provided in the Github repository \footnote{\url{https://github.com/Freenove/Freenove_Ultimate_Starter_Kit_for_Raspberry_Pi.git}}; and connected the stepper driver and power supply breakout board to the Raspberry GPIO extension board according to the wiring diagram provided in the file \texttt{Tutorial.pdf}. However, the stepper motor was not functioning at all and the LEDs on the driver board that indicate which coil is being powered were not lighting up. Also, the board became very hot to the touch when connected to the RPi and power supply module. A potential reason is the fact that a 12 V power adapter is used to power the power supply module rather than the likely recommended 5 V. A second reason is the differences between the RPi model 3 and 3B+ that I use personally. I will need to test the python script on my own raspberry Pi to see if this is the cause of any problems. 
-\end{addmargin}
-
 \labday{Tuesday, November 12, 2019}
 After the RAM group meeting on Friday Nov. 8, a member of the robot localization group commented on my idea for integrating a stepper motor. He asked about whether there was any actual way that the stepper motor can be linked to energy efficiency. To this day, I have not found a single way that the motor can be used to control a device that can help to lower energy consumption in a home or building. Over the weekend, I came upon a new IoT product on the market named the Sensibo Sky \footnote{\url{https://sensibo.com/products/sensibo-sky}} which is a smart air conditioner controller. This product is similar to the Google Nest thermostat; however, it is used to control standalone air conditioners rather than the central HVAC system. It is capable of connecting to any air conditioner that uses an IR remote control. Some of the features of the device include 7-day scheduling, geofencing (a way determine whether occupants are in a house), control of AC unit on/off status, and fan speed. It claims to be compatible with IFTTT (If This Then That), Amazon Alexa, and Google Home. A potential challenge would be finding an air conditioner to control; for sure, it would not be feasible to work with controlling it in the lab due to potential safety risks/fire hazards. Another idea would be to control an AC unit in my own home. However, the first step will be to find a way of purchasing the Sky as the International version is fairly expensive at \$119 on Amazon.
 
+\labday{Thursday, November 14, 2019}
+While waiting for a response from Dr. Miah about purchasing the new device, I worked on updating the motor device page by adding scheduling. The first I took was to set the variable DEBUG in the django web server settings file to true. This enables changes in each django application html template to be seen after refreshing the page. In addition, whenever a server-side error occurs detailed information will be displayed in the browser about where the error occurred. Before when this variable was set to false, the web server had to be restarted every time changes were made. 
+\smallbreak\noindent
+After uncommenting the set schedule button in the template for the motor device page named "motor.html", the following error is displayed
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{figs/vewsScheduleError}
+\end{figure} 
+This message means that the \texttt{showSchedule} view function is returning an error as there is no \texttt{motor\_schedule} view function defined whose output should be returned by the \texttt{showSchedule} function.
+
+\labday{Tuesday, November 19, 2019}
+Work was continued on developing the schedule app for the motor. the code in the body of the function \texttt{plugload\_schedule} was copied into the new view function \texttt{motor\_schedule}. However, a few modifications were made to the code by adding two new dictionaries into the file \texttt{Web\_Server.\_utils.defaults.py} named \texttt{MOTOR\_DEFAULT\_SCHEDULE} and \texttt{DISABLED\_VALUES\_MOTOR} and replacing their plugload equivalents in the copied code with the new versions. Also, a new html template was added named \texttt{motor\_schedule.html}. When selecting the Set Schedule button on the motor dashboard page, the following exception occured.
+\begin{Verbatim}
+File "/home/ramgroup/BEMOSS3.5/Web_Server/webapps/
+schedule/views.py" in motor_schedule
+  290.     
+  user_group = request.user.group.all().values_list('name', flat=True)
+
+File "/home/ramgroup/BEMOSS3.5/env/local/lib/python2.7/site-packages/django/utils/
+functional.py" in inner
+  239.         return func(self._wrapped, *args)
+
+Exception Type: AttributeError at /schedule/b827ebbfbade/
+Exception Value: 'User' object has no attribute 'group'
+\end{Verbatim} 
+I will need to research this problem as I do not know a lot about HttpRequests are handled in Django.
+\end{addmargin}
 \bibliographystyle{plain}
 \bibliography{bib/seniorProject2017.bib}
 
