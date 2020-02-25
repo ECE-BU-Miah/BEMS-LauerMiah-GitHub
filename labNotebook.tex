@@ -1258,6 +1258,26 @@ Exception Type: AttributeError at /schedule/b827ebbfbade/
 Exception Value: 'User' object has no attribute 'group'
 \end{Verbatim} 
 I will need to research this problem as I do not know a lot about HttpRequests are handled in Django.
+
+\labday{Tuesday, February 25, 2020}
+Today, I worked on researching bootstrap which is a html and css framework for building responsive and resizable web pages. The following W3 Schools tutorial was followed 
+\smallbreak\noindent
+\url{https://www.w3schools.com/bootstrap4/}
+
+Secondly, I created a simple Python http web server that I copied from this link
+\smallbreak\noindent
+\url{https://stackoverflow.com/questions/39801718/how-to-run-a-http-server-which-serves-a-specific-path}
+The code is shown below:
+\begin{Verbatim}
+import http.server
+import socketserver
+
+PORT = 8000
+Handler = http.server.SimpleHTTPRequestHandler
+httpd = socketserver.TCPServer(("", PORT), Handler)
+print("serving at port", PORT)
+httpd.serve_forever()
+\end{Verbatim}
 \end{addmargin}
 \bibliographystyle{plain}
 \bibliography{bib/seniorProject2017.bib}
