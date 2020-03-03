@@ -1278,6 +1278,17 @@ httpd = socketserver.TCPServer(("", PORT), Handler)
 print("serving at port", PORT)
 httpd.serve_forever()
 \end{Verbatim}
+
+\labday{Tuesday, March 3, 2020}
+Because I found that having a good foundation for the web app is nice to have first, I decided to context switch to working on the back end of the site. In this way, I can build up the project directory and setup any necessary databases. Later I can move to working on the front which (for me at least) will be a much more difficult task as I have no background in web design. Instead of using the large, more complex full-stack web framework that BEMOSS uses, Django, I will use flask as it will decrease development time. This is necessary as I only have 1 year to develop the application. First, before the project is to be setup, I will upgrade the laptop to Ubuntu 18.04 LTS from the current Ubuntu 16.04. This could potentially be a problem if I need to run BEMOSS from the laptop; however, a backup laptop is available. This tutorial from Medium was used:
+\url{https://www.cyberciti.biz/faq/how-to-upgrade-ubuntu-16-04-to-18-04-lts-using-terminal/}
+However, after running the command
+\begin{Verbatim}
+sudo do-release-upgrade
+\end{Verbatim} 
+I was notified at the end that the download will take roughly 18 minutes and the installation will take several hours, so this upgrade will have to wait for another day. At the url:
+\url{https://flask.palletsprojects.com/en/1.1.x/quickstart/#a-minimal-application}, I followed the tutorial on how to use flask. In order to render python data to an HTML template, Flask provides an interface to do this directly by using templates. Calling the function \texttt{render\_template()} defined in the module flask will render to an html page provided in the first argument followed by keyword arguments to be rendered to the page. The template language in use is Jinja$2$.
+
 \end{addmargin}
 \bibliographystyle{plain}
 \bibliography{bib/seniorProject2017.bib}
