@@ -1289,6 +1289,62 @@ sudo do-release-upgrade
 I was notified at the end that the download will take roughly 18 minutes and the installation will take several hours, so this upgrade will have to wait for another day. At the url:
 \url{https://flask.palletsprojects.com/en/1.1.x/quickstart/#a-minimal-application}, I followed the tutorial on how to use flask. In order to render python data to an HTML template, Flask provides an interface to do this directly by using templates. Calling the function \texttt{render\_template()} defined in the module flask will render to an html page provided in the first argument followed by keyword arguments to be rendered to the page. The template language in use is Jinja$2$.
 
+\labday{Monday, March 16, 2020}
+A break was taken from Flask work and web development to work on communicating with the ESP8266 Node MCU boards. Although full approval from the advisor has not been obtained yet, I would like to replace the XBee modules and RPi for communicating with motor. This way only one wireless communication protocol has to be used (Wi-Fi) rather than having to use two (Wi-Fi and Zigbee). I plugged in my board to the laptop which was instantly recognized as '/dev/ttyUSB0' by linux. Then, I downloaded the latest firmware from the URL:
+\url{http://micropython.org/download#esp8266} (the latest bin file). The tutorial at \url{https://docs.micropython.org/en/latest/esp8266/tutorial/intro.html} was followed to flash firmware to the device. First, the flash was erased with the command:
+\begin{Verbatim}
+esptool.py --port /dev/ttyUSB0 erase_flash
+\end{Verbatim}
+However, this command threw an error stating the it could not open the port tty/USB$0$ due to a permission error. This was resolved by instead using the command:
+\begin{Verbatim}
+sudo python3 -m esptool --port /dev/ttyUSB0 erase_flash
+\end{Verbatim}
+Next the binary file was flashed to the chip using the command:
+\begin{Verbatim}
+sudo python3 -m esptool --port /dev/ttyUSB0 --baud 460800 write_flash 
+--flash_size=detect 0 esp8266-20191220-v1.12.bin
+\end{Verbatim}
+After the firmware was flashed to the board, an REPL (Read Evaluate Print Loop) was obtained over serial by running the command:
+\begin{Verbatim}
+sudo picocom /dev/ttyUSB0 -b115200
+\end{Verbatim}
+This is simply a python interpreter that can run micropython. The module \texttt{machine} is used for performing different GPIO operations.
+
+\labday{Thursday, March 19, 2020}
+Work was done to flash a python program to the esp8266 board today. First the command 
+\begin{Verbatim}
+pip3 install adafruit-ampy
+\end{Verbatim}
+was used to install adafruit ampy for performing different operations on the board. 
+
+\labday{Thursday, March 26, 2020}
+A simple TCP/IP web server written in python was written which will continually accept client connections and receive bytes objects. Two different LEDs are used, GPIO$5$ corresponding to D$1$ and GPIO$4$ corresponding to D$2$. Once these bytes objects are decoded as UTF-$8$ strings, decisions are made based on which command was sent:
+\begin{itemize}
+\item 'ON' corresponds to toggling a GPIO pin on
+\item 'OFF' corresponds to toggling a GPIO pin off
+\item 'Q' will end the client session with the server
+\item if an invalid command is entered the program will continue operation
+\item 'PWM: <int:pwm value>' corresponds to setting the PWM value of a second LED
+\end{itemize}
+Once 'Q' is entered by the client, the client program will end, and the server will wait to accept another connection from a client. This program was added in the script \texttt{main.py}. In order to allow ampy to access the serial port \texttt{/dev/ttyUSB0}, the permissions must be modified using:
+\begin{Verbatim}
+sudo chmod 777 /dev/ttyUSB0
+\end{Verbatim}
+Then the command:
+\begin{Verbatim}
+ampy --port /dev/ttyUSB0 -b115200 put main.py
+\end{Verbatim}
+was run to flash the program to the board.
+\smallbreak\noindent
+The file \texttt{main.py} will automatically be run on board start up. To restart the program, the reset button on the board can be pressed. 
+\smallbreak\noindent
+To connect to the board a second program was written called \texttt{client.py} which will connect to the board with the IP hardcoded and assigned to a variable. In the future I will need a way to determine the OUI of the ESP$8266$ node MCU board, and determine the IP address of the board similar to the way the IP address of the RPi was determined. Once the client is connected to the server, the user will be prompted to enter a command in an infinite loop. If the string 'Q' is entered, the loop will break. The program \texttt{client.py} is designed to run on any computer capable of running python. This functionality will be implemented into the new platform by sending a command to the server whenever a button is pressed on the web page for the device.
+\smallbreak\noindent
+A directory was created in the DocsBEMOSS directory named \texttt{esp8266} which contains the server and client code as well as an example http server pulled from a micropython tutorial for the board available at \url{https://docs.micropython.org/en/latest/esp8266/tutorial/}.
+\smallbreak\noindent
+PWM control was added later on to prove that it can be possible to control the speed of a motor wirelessly if speed control is desired later on.
+\smallbreak\noindent
+The files \texttt{http\_server.py} and \texttt{test.py} were removed from the directory \texttt{esp8266/} as they contained stolen code.
 \end{addmargin}
 \bibliographystyle{plain}
 \bibliography{bib/seniorProject2017.bib}
