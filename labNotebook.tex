@@ -1482,6 +1482,103 @@ $(document).ready(function() {
 \end{Verbatim}
 This function sends a json stringified list containing the ids of the devices to be discovered. A flask view function will be registered to the url \texttt{/discovery/ajax} which will publish the data found to the discovery agent. However, the problem I am having is that when the discovery agent is started with the \texttt{run.sh} script, the terminal hangs and the web server is not able to run. Therefore, I will need to figure how to get all the agents to run from one terminal. This is solved by using the \& operator in bash will spawn a new process for the agent to run.
 
+\labday{Tuesday, May 26, 2020}
+When I tried publishing a message to the discovery agent I got the following error:
+\begin{Verbatim}
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/blauer/NewBEMS/WebServer/pubsub.py", line 7, in publish
+    socket.send(f"{topic} {message}".encode('utf-8'))
+  File "/home/blauer/.local/lib/python3.6/site-packages/zmq/sugar/socket.py", 
+  line 400, in send
+    return super(Socket, self).send(data, flags=flags, copy=copy, track=track)
+  File "zmq/backend/cython/socket.pyx", line 728, 
+  in zmq.backend.cython.socket.Socket.send
+  File "zmq/backend/cython/socket.pyx", line 775, 
+  in zmq.backend.cython.socket.Socket.send
+  File "zmq/backend/cython/socket.pyx", line 247, 
+  in zmq.backend.cython.socket._send_copy
+  File "zmq/backend/cython/socket.pyx", line 242, 
+  in zmq.backend.cython.socket._send_copy
+  File "zmq/backend/cython/checkrc.pxd", line 26, 
+  in zmq.backend.cython.checkrc._check_rc
+zmq.error.ZMQError: Operation not supported
+\end{Verbatim}
+I discovered that the problem lied in the parameter passed to the \texttt{zmq.Context.socket} constructor which was set as zmq.SUB originally but needed to be changed to zmq.PUB. The corrected code is posted below in the file \texttt{/NewBEMS/WebServer/pubsub.py}:
+\begin{Verbatim}
+import zmq
+
+def publish(topic, message, port):
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+    socket.bind(f"tcp://*:{port}")
+    socket.send(f"{topic} {message}".encode('utf-8'))
+    socket.close()
+    context.term()
+\end{Verbatim}
+A second problem I am having is when the function is called, the agent is not properly receiving the message. The problem only occurs when the code from the function above is run inside of a script but not when each line is run individually using the python interpreter.
+\smallbreak\noindent
+After some experimenting, I found that the message must be sent twice with a short delay (100 ms) in between in order for the message to be received by the subscriber (Discovery Agent). The message is not in fact received twice by the agent but only once by the second transmission. Therefore, the modified code is posted below:
+\begin{Verbatim}
+import zmq
+import time
+
+def publish(topic, method, args):
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+    socket.bind("tcp://*:5556")
+    # The message must be sent twice to the subscriber in
+    # order for it to be properly received. Not totally sure
+    # why this is, possibly just the way zmq was designed.
+    for _ in range(2):
+        socket.send(f"{topic} {method} {args}".encode('utf-8'))
+        time.sleep(0.1)
+    socket.close()
+    context.term()
+\end{Verbatim}
+After further experimenting I found that 100 ms is too short, so it was increased to 1 s with guaranteed transmission.
+\smallbreak\noindent
+The next task to be completed is working on the \texttt{searchForDevices} method in the \texttt{DiscoveryAgent} class which will automatically import the corresponding API modules in the DeviceDrivers directory depending on the device to be discovered. Then each device will have a \texttt{findDevices} method which will search for devices on the network.
+
+\labday{Thursday, May 28, 2020}
+What needs to be done today is to do the following:
+\begin{itemize}
+\item Make the NewBEMS directory visible in the virtual environment (modify the PATH variable)
+\item Create a new directory called \texttt{utils} in the NewBEMS directory that will contain some helper modules for database access, etc.
+\item Add a text field to the supported devices table called API
+\end{itemize}
+Adding the NewBEMS (top level directory) to the path is as simple as adding the path
+
+\labday{Monday, June 8, 2020}
+Today, I worked on testing my DiscoveryAgent method for adding new entries to the 'ActiveDevices' table once they are discovered by the agent named \texttt{setDeviceToActive}. The code is posted below:
+\begin{Verbatim}
+    def setDeviceToActive(self, metadata):
+        conn = sqlite3.connect('/home/blauer/NewBEMS/WebServer/meta.db')
+        curs = conn.cursor()
+        print('Executing cursor!')
+        curs.execute("SELECT id FROM ActiveDevices WHERE name = ?;", 
+        (metadata['name'],))
+        result = curs.fetchall()
+        print(result)
+        if len(result) == 0:
+            try:
+                print('Adding device to active devices')
+                curs.execute('INSERT INTO ActiveDevices 
+                (name, manufacturer, macaddress) VALUES (?, ?, ?);',
+                    (metadata['name'], metadata['manufacturer'], 
+                    metadata['macaddress']))
+            except Exception as e:
+                print("Insertion into active devices failed")
+        curs.close()
+        conn.close()
+\end{Verbatim}
+The code inside is executing; however the SQL query to insert the device into the database is failing in some way as when I run the query 
+\texttt{SELECT * FROM ActiveDevices;} in the command prompt for the database it doesn't return any values. However, after running the query:
+\begin{Verbatim}
+SELECT * FROM ActiveDevices; 
+\end{Verbatim}
+in the \texttt{setDeviceToActive} method and calling \texttt{curs.fetchall()} the database returned the correct values.
+
 \end{addmargin}
 
 \bibliographystyle{plain}
