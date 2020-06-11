@@ -1139,12 +1139,6 @@ In the meeting it was decided to work on implementing a new load whose power con
 Today, new loads were researched on the Web. Some of the openHAB documentation was read over to find any loads that could be controlled over a LAN. One obvious one is computer/server as they tend to consume a lot of energy. From the url \url{https://www.openhab.org/docs/configuration/items.html}, under the section on multi binding/ channel linkage, interaction with an office pc is described. Network health and power consumption are monitored with a network health binding and wake-on-lan binding respectively.
 \smallbreak\noindent
 More research was done on the Wake-On-LAN networking standard on wikipedia (\url{https://en.wikipedia.org/wiki/Wake-on-LAN}). A network message may be sent to a computer to turn on or awaken the machine. The device sending the message must be connected to the same LAN as the target PC. To implement on a wireless network, wake on wireless LAN must be used. However, after some further searching WoWLAN appears to have some serious limitations compared to WoLAN. Lastly, a computer can be in 7 different power states which are listed in Figure~\ref{figs:powerstates}.
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.4]{figs/machinestates.png}
-\caption{ACPI power states}
-\label{figs:powerstates}
-\end{figure} 
 With these states it may be possible to implement a dynamic programming algorithm to optimize the power consumption of the computer. However, I am not sure how to control these power states using the Wake on LAN, or if it is even possible.
 
 \labday{October 22, 2019}
@@ -1236,10 +1230,7 @@ After the RAM group meeting on Friday Nov. 8, a member of the robot localization
 While waiting for a response from Dr. Miah about purchasing the new device, I worked on updating the motor device page by adding scheduling. The first I took was to set the variable DEBUG in the django web server settings file to true. This enables changes in each django application html template to be seen after refreshing the page. In addition, whenever a server-side error occurs detailed information will be displayed in the browser about where the error occurred. Before when this variable was set to false, the web server had to be restarted every time changes were made. 
 \smallbreak\noindent
 After uncommenting the set schedule button in the template for the motor device page named "motor.html", the following error is displayed
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.4]{figs/vewsScheduleError}
-\end{figure} 
+
 This message means that the \texttt{showSchedule} view function is returning an error as there is no \texttt{motor\_schedule} view function defined whose output should be returned by the \texttt{showSchedule} function.
 
 \labday{Tuesday, November 19, 2019}
@@ -1345,7 +1336,251 @@ A directory was created in the DocsBEMOSS directory named \texttt{esp8266} which
 PWM control was added later on to prove that it can be possible to control the speed of a motor wirelessly if speed control is desired later on.
 \smallbreak\noindent
 The files \texttt{http\_server.py} and \texttt{test.py} were removed from the directory \texttt{esp8266/} as they contained stolen code.
+
+\labday{Tuesday, April 7, 2020}
+I created a github repository named \texttt{NewBEMS} for the project located at \url{https://github.com/blauer890/NewBEMS.git}. Later I will need to change this name; however we have not decided on a proper name for the software as of yet.
+
+\labday{Friday, April 17, 2020}
+Some of the major tasks that are required for the project were itemized in order of importance:
+\begin{itemize}
+\item Research, determine, and develop agents
+\item Device API/Driver development
+\item Microgrid Simulation
+\item User management
+\end{itemize}
+Right now I will work on determining what agents should reside in the platform. A lot of inspiration will taken from the BEMOSS repository. 
+
+\labday{Friday, May 1, 2020}
+Some work was done on the Discovery Agent today. A method named \texttt{subscribe} was added that takes a topic as a parameter and passes it to an instance of a zmq socket. The socket connects to tcp server \texttt{tcp://localhost:5556} which is the server used for publishing and subscribing. For now, inside an infinite loop it waits for incoming messages and prints them out. The current topic the DiscoveryAgent is subscribing to is 'discovery' which could be published to from anywhere in the web app with a connection to the server. To allow the agent to perform other actions while awaiting for incoming messages, the subscriber method is started in a separate thread using the Python \texttt{threading} library. 
+\smallbreak\noindent
+Once a message has been received, it is parsed into the three different strings:
+\texttt{topic, method, args}. The method refers to the name of the method that is to be called on the agent object.
+
+\labday{Wednesday, May 20, 2020}
+Today, I worked on implementing the device discovery feature in the web UI. Ideally, what I would like to have is a list of devices displayed as bootstrap list-group-items with radio button embedded in them pulled right. At the bottom under the list-group, a "Find devices" button will be present which once pressed will send a message to the Device Discovery agent to start finding devices on the LAN.
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.35]{figs/img/deviceDiscoveryList}
+\end{figure}
+Once a device or devices have been discovered, I would like to add a pop up window to showcase the devices that were discovered. With the pop up window open the background should be faded and not selectable. However, my knowledge of javascript is still pretty low, so that my take a bit of time to figure out. One change that was made to the main container is that the padding left, right, top, and bottom were all set to 20px. This way, whenever new supported devices are added the size of the container grows vertically.
+\smallbreak\noindent
+As a small experiment, I ran the server on 0.0.0.0 to allow all devices on the network to access the software by changing the line in the \texttt{run.sh} script from 
+\begin{verbatim}
+flask run
+\end{verbatim}
+to
+\begin{verbatim}
+flask run --host=0.0.0.0
+\end{verbatim}
+
+\labday{Friday, May 22, 2020}
+Work was continued on discovery today. I need to add python code into the html template discovery.html for loading all the supported devices into the page. This will require setting up the database. I created three CREATE TABLE statements in the \texttt{initialization.sql} file. The tables are \texttt{users}, \texttt{supported\_devices}, and \texttt{active\_devices}. 
+At the end I added a statement to add a single row into supported devices table. The code is posted below:
+\begin{Verbatim}
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS supported_devices;
+DROP TABLE IF EXISTS active_devices;
+
+CREATE TABLE users (
+  Id int NOT NULL AUTO_INCREMENT,
+  Username varchar(255),
+  Password varchar(255)
+);
+
+CREATE TABLE supported_devices (
+  Name varchar(255),
+  Manufacturer varchar(255),
+);
+
+CREATE TABLE active_devices (
+  Id int NOT NULL AUTO_INCREMENT,
+  Name varchar(255),
+  Manufacturer varchar(255),
+
+);
+
+INSERT INTO supported_devices (Name, Manufacturer)
+VALUES ('Insight Switch', 'Belkin');
+
+\end{Verbatim}
+Later I realized that the syntax of the code posted above is not appropriate for SQLite. Therefore, the code was changed to below:
+\begin{Verbatim}
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  username TEXT NOT NULL,
+  password TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS SupportedDevices (
+  name TEXT,
+  manufacturer TEXT
+);
+
+CREATE TABLE IF NOT EXISTS ActiveDevices (
+  id INT PRIMARY KEY,
+  name TEXT,
+  manufacturer TEXT
+);
+
+INSERT INTO SupportedDevices (name, manufacturer)
+VALUES ('Insight Switch', 'Belkin');
+
+\end{Verbatim}
+
+\labday{Monday, May 25, 2020}
+I continued work on getting the devices pulled from the supported devices table into the discovery.html template via the Jinja2 template engine. In the disovery.py file which includes the view function to render data to the html file, the line \texttt{db.cursor.execute('SELECT * FROM SupportedDevices'}. However, I was having problems with the table \texttt{SupportedDevices} not being found in the database even though it is clearly added in the \texttt{initialization.sql} script I wrote. The same line was ran in the console using the flask debugger. It was found that the problem stemmed from the fact that the \texttt{WebServer} directory is not on the path when the server is run. This causes a problem when an attempt to connect to the database is made. Thus, the line \texttt{db = database.DBConnection('meta.db')} had to be changed to \texttt{db = database.DBConnection('./WebServer/meta.db')} where the database python module is a python file that contains the class \texttt{DBConnection} for performing different database operations. When the line without the relative path is specified, a file called 'meta.db' is created in the \texttt{\textasciitilde /NewBEMS} directory. The code for the \texttt{database} module is shown below.
+\begin{Verbatim}
+import sqlite3
+
+class DBConnection:
+    def __init__(self, db_name):
+        self.db_name = db_name
+        self.conn = sqlite3.connect(self.db_name)
+        self.cursor = self.conn.cursor()
+
+    def close(self):
+        self.cursor.close()
+        self.conn.close()
+\end{Verbatim}
+After performing this change, the \texttt{discovery.html} page loaded properly in the browser.
+\smallbreak\noindent
+Since it makes things more convenient to have the device manufacturer first and device name second, I changed around the order of these rows in the Supported Devices table. Accordingly, I updated the \texttt{findDevices} function used by the \texttt{discovery} view function for rendering supported devices to the page. Instead of using basic indexing, the string \texttt{join} method was used instead. The next task that needs to be completed is figuring out how to distinguish each devices each other with a unique id. The simple way of implementing this is by simpling using the entry
+\begin{verbatim}
+id INTEGER PRIMARY KEY AUTOINCREMENT
+\end{verbatim}
+which will increment the id value every time a new row is added to the database. An elegant way of indexing each device id is by using the loop.index variable available whenever at iterable object is iterated over in an html page. For example, the code
+\begin{Verbatim}
+{% for _ in range(3) %}
+<h1>{{ loop.index }}</h1>
+{% endfor %}
+\end{Verbatim}
+will write out the h1 headers 1,2,3. The loop.index variable can be placed as the value of an id attribute for each checkbox on the discovery page. Each id will correspond to the id of each device.
+\smallbreak\noindent
+An addition to the \texttt{discovery.js} file will be need to made which registers callback function for the "Search for devices" button whenever it is pressed with jQuery. The jQuery.ajax method will be used for sending an ajax request to the server to prevent the page from reloading when the submit is pressed. The code for the request is posted below:
+\begin{Verbatim}[tabsize=4]
+$(document).ready(function() {
+  $("#find_devices").click( function(evt) {
+    // Prevent the default behavior from occurring.
+    evt.preventDefault();
+    var ids = [];
+    $("input[type=checkbox]:checked").each(function() {
+      ids.push($(this).attr("id"));
+    });
+    jsonIDs = JSON.stringify(ids)
+    // alert(jsonDevices);
+    $.ajax({
+      url: '/discovery/ajax',
+      type: 'POST', // Send a POST request
+      contentType: 'application/json;charset=UTF-8',
+      data: jsonIDs,
+      success: function(response) {
+        console.log(response);
+      }
+    });
+  });
+});// $ here so the text after isn't green in the tex file
+\end{Verbatim}
+This function sends a json stringified list containing the ids of the devices to be discovered. A flask view function will be registered to the url \texttt{/discovery/ajax} which will publish the data found to the discovery agent. However, the problem I am having is that when the discovery agent is started with the \texttt{run.sh} script, the terminal hangs and the web server is not able to run. Therefore, I will need to figure how to get all the agents to run from one terminal. This is solved by using the \& operator in bash will spawn a new process for the agent to run.
+
+\labday{Tuesday, May 26, 2020}
+When I tried publishing a message to the discovery agent I got the following error:
+\begin{Verbatim}
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/blauer/NewBEMS/WebServer/pubsub.py", line 7, in publish
+    socket.send(f"{topic} {message}".encode('utf-8'))
+  File "/home/blauer/.local/lib/python3.6/site-packages/zmq/sugar/socket.py", 
+  line 400, in send
+    return super(Socket, self).send(data, flags=flags, copy=copy, track=track)
+  File "zmq/backend/cython/socket.pyx", line 728, 
+  in zmq.backend.cython.socket.Socket.send
+  File "zmq/backend/cython/socket.pyx", line 775, 
+  in zmq.backend.cython.socket.Socket.send
+  File "zmq/backend/cython/socket.pyx", line 247, 
+  in zmq.backend.cython.socket._send_copy
+  File "zmq/backend/cython/socket.pyx", line 242, 
+  in zmq.backend.cython.socket._send_copy
+  File "zmq/backend/cython/checkrc.pxd", line 26, 
+  in zmq.backend.cython.checkrc._check_rc
+zmq.error.ZMQError: Operation not supported
+\end{Verbatim}
+I discovered that the problem lied in the parameter passed to the \texttt{zmq.Context.socket} constructor which was set as zmq.SUB originally but needed to be changed to zmq.PUB. The corrected code is posted below in the file \texttt{/NewBEMS/WebServer/pubsub.py}:
+\begin{Verbatim}
+import zmq
+
+def publish(topic, message, port):
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+    socket.bind(f"tcp://*:{port}")
+    socket.send(f"{topic} {message}".encode('utf-8'))
+    socket.close()
+    context.term()
+\end{Verbatim}
+A second problem I am having is when the function is called, the agent is not properly receiving the message. The problem only occurs when the code from the function above is run inside of a script but not when each line is run individually using the python interpreter.
+\smallbreak\noindent
+After some experimenting, I found that the message must be sent twice with a short delay (100 ms) in between in order for the message to be received by the subscriber (Discovery Agent). The message is not in fact received twice by the agent but only once by the second transmission. Therefore, the modified code is posted below:
+\begin{Verbatim}
+import zmq
+import time
+
+def publish(topic, method, args):
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+    socket.bind("tcp://*:5556")
+    # The message must be sent twice to the subscriber in
+    # order for it to be properly received. Not totally sure
+    # why this is, possibly just the way zmq was designed.
+    for _ in range(2):
+        socket.send(f"{topic} {method} {args}".encode('utf-8'))
+        time.sleep(0.1)
+    socket.close()
+    context.term()
+\end{Verbatim}
+After further experimenting I found that 100 ms is too short, so it was increased to 1 s with guaranteed transmission.
+\smallbreak\noindent
+The next task to be completed is working on the \texttt{searchForDevices} method in the \texttt{DiscoveryAgent} class which will automatically import the corresponding API modules in the DeviceDrivers directory depending on the device to be discovered. Then each device will have a \texttt{findDevices} method which will search for devices on the network.
+
+\labday{Thursday, May 28, 2020}
+What needs to be done today is to do the following:
+\begin{itemize}
+\item Make the NewBEMS directory visible in the virtual environment (modify the PATH variable)
+\item Create a new directory called \texttt{utils} in the NewBEMS directory that will contain some helper modules for database access, etc.
+\item Add a text field to the supported devices table called API
+\end{itemize}
+Adding the NewBEMS (top level directory) to the path is as simple as adding the path
+
+\labday{Monday, June 8, 2020}
+Today, I worked on testing my DiscoveryAgent method for adding new entries to the 'ActiveDevices' table once they are discovered by the agent named \texttt{setDeviceToActive}. The code is posted below:
+\begin{Verbatim}
+    def setDeviceToActive(self, metadata):
+        conn = sqlite3.connect('/home/blauer/NewBEMS/WebServer/meta.db')
+        curs = conn.cursor()
+        print('Executing cursor!')
+        curs.execute("SELECT id FROM ActiveDevices WHERE name = ?;", 
+        (metadata['name'],))
+        result = curs.fetchall()
+        print(result)
+        if len(result) == 0:
+            try:
+                print('Adding device to active devices')
+                curs.execute('INSERT INTO ActiveDevices 
+                (name, manufacturer, macaddress) VALUES (?, ?, ?);',
+                    (metadata['name'], metadata['manufacturer'], 
+                    metadata['macaddress']))
+            except Exception as e:
+                print("Insertion into active devices failed")
+        curs.close()
+        conn.close()
+\end{Verbatim}
+The code inside is executing; however the SQL query to insert the device into the database is failing in some way as when I run the query 
+\texttt{SELECT * FROM ActiveDevices;} in the command prompt for the database it doesn't return any values. However, after running the query:
+\begin{Verbatim}
+SELECT * FROM ActiveDevices; 
+\end{Verbatim}
+in the \texttt{setDeviceToActive} method and calling \texttt{curs.fetchall()} the database returned the correct values.
+
 \end{addmargin}
+
 \bibliographystyle{plain}
 \bibliography{bib/seniorProject2017.bib}
 
