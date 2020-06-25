@@ -36,8 +36,8 @@ if [[ -d venv/lib/$pyversion/site-packages/ ]];
 then
   cd venv/lib/$pyversion/site-packages/
   touch pth_directories.pth
-  echo $webserver_dir > pth_directories.pth
-  echo $project_dir > pth_directories.pth
+  echo $webserver_dir >> pth_directories.pth
+  echo $project_dir >> pth_directories.pth
   cd $project_dir
   echo "Succesfully added directories to the PYTHON_PATH"
 else

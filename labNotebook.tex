@@ -1629,6 +1629,9 @@ fi
 # $
 \end{Verbatim}
 After some Googling I found that I need a space between "meta.db" and the "]" character. I was able to succesfully fix all the syntax errors and bugs, so now I will try to test the installation of the software on a Raspberry Pi although a VM would be perfectly acceptable as well.
+
+\labday{Thursday, June 25, 2020}
+Today, I copied the platform files into the \texttt{BEMS-LauerMiah-GitHub} directory into the directory \texttt{code}. When I run the script to run the platform, I found that the directory \texttt{code} interferes with a python module in the standard library called \texttt{code} which enables the ability to emulate Python's interactive interpreter. One of the \texttt{werkzeug} libraries was throwing an exception when it tried to interpret this module as the root directory of the project was named the same. After renaming the directory to \texttt{NewBEMS} everything appeared to work fine.
 \end{addmargin}
 
 \bibliographystyle{plain}
