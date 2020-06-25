@@ -1,0 +1,19 @@
+body {
+  background-color: lightgrey;
+}
+.white-bg {
+  background-color: white;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  border-radius: 20px;
+}
+
+.sw-title {
+  text-align: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
