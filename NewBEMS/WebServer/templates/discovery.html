@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Intelligent Building Energy Monitoring System</title>
+    <link type="text/css" rel="stylesheet" href="../static/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="../static/css/nav_top.css">
+    <script src="../static/js/jquery-3.5.1.js"></script>
+    <!-- Tip: use Ctrl + F5 to reload all resources on the page.-->
+  </head>
+  <body>
+    <div class="container white-bg">
+    <h1 class="sw-title"> Intelligent Building Energy Monitoring System</h1>
+    {% include 'nav_top.html' %}
+    <div class="container">
+      <ul class="list-group">
+        {% for deviceName in deviceNames %}
+        <li class="list-group-item clearfix bg-light">
+          {{ deviceName }}
+          <div class="float-right">
+            <input type="checkbox" class="form-check-input" id="{{loop.index}}">
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </br>
+    <input class="btn btn-primary" type="submit" id="find_devices" value="Search for devices">
+    </div>
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+      Launch demo modal
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">The following devices were found:</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            WeMo Switch
+          </div>
+          <div class="modal-body">
+            Device
+          </div>
+          <div class="modal-footer">
+            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button> -->
+            <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+      feather.replace()
+    </script>
+    <script src="../static/js/popper.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <script src="../static/js/notify.js"></script>
+    <script src="../static/js/apps/discovery.js"></script>
+
+  </body>
+</html>

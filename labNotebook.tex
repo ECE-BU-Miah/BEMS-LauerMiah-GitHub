@@ -184,7 +184,7 @@
 \end{center}
 }
 \author{\Huge Brian Lauer \\ \\ \LARGE blauer@mail.bradley.edu \\[2cm]} % Your name and email address
-\date{Beginning March 13, 2018} % Beginning date
+\date{Beginning March 06, 2019} % Beginning date
 \maketitle
 
 %\maketitle % Title page
@@ -1579,6 +1579,59 @@ SELECT * FROM ActiveDevices;
 \end{Verbatim}
 in the \texttt{setDeviceToActive} method and calling \texttt{curs.fetchall()} the database returned the correct values.
 
+\labday{Friday, June 12, 2020}
+I read up on the linux command \texttt{readlink} that I discovered in the BEMOSS installation script in the BEMOSS$3.5$/GUI directory. It "prints the value of a symbolic link or canonical file name". If the command \texttt{readlink -f "\$0"}
+is run in a shell script it prints the full path to the shell script or alternatively it can be run on the command link which prints the full path to a provided file. The objective is to determine how to connect to the meta database which lies in the WebServer directory from any file in the codebase. 
+\medbreak\noindent
+Instead of using the \texttt{readlink} command, I decided to use the python function \texttt{os.getcwd()} from the os module as it is a much simpler way of returning the working directory of a file. I then created a file named \texttt{global\_settings.py} in the base project dir which holds global string variables containing paths to all the project directories. These path constants were subsituted for the full paths provided to some of the \texttt{sqlite3.connect} calls.
+\medbreak\noindent
+Next, what I would like to do is to create an installation shell script to allow anyone to clone the repository and succesfully install the current working version of the software from scratch on an Ubuntu laptop/desktop. Here's what the shell script will do 
+\begin{enumerate}
+\item Assign the project directory variables
+\item Update Linux (\texttt{sudo apt-get update})
+\item Install pip3
+\item Delete the "venv" directory if it already exists
+\item Create a virtual environment name "venv"
+\item Activate the virtual environment
+\item Use the requirements.txt file to install all necessary dependencies
+\item Create a directories.pth file in the site-packages directory and add the directories to be added to the PYTHON\_PATH variable to the file
+\item Deactivate the virtual environment
+\end{enumerate}
+To prevent the \texttt{TempTest/} and \texttt{venv/} directories and all \texttt{\_\_pycache\_\_} directories from being added, I created a \texttt{.gitignore} file with the following contents:
+\begin{Verbatim}
+# Compiled python
+__pycache__/
+.pyc
+.pyo
+
+# Miscellaneous directories
+TempTest/
+venv/
+\end{Verbatim}
+However, since I am kind of still new to git, the unwanted files/directories placed in the \texttt{.gitignore} will not go away once the changes are pushed to the master branch. The command
+\begin{verbatim}
+git rm -rf --cached .
+\end{verbatim}
+will unstage and remove paths from the index but keep the files in the working tree on the local disk \footnote{\url{https://stackoverflow.com/questions/25436312/gitignore-not-working/25436481}}. A problem was encountered when running the \texttt{run.sh} script as I made a syntax error in an if statement.
+\begin{Verbatim}
+./run.sh: line 17: [: missing `]'
+\end{Verbatim}
+this code is found in the section of the script where I add the database file named \texttt{meta.db} which is shown below:
+\begin{Verbatim}
+# Setup the db file
+cd $webserver_dir
+if [ -f "meta.db"]; then
+  rm meta.db
+  touch meta.db
+else
+  touch meta.db
+fi 
+# $
+\end{Verbatim}
+After some Googling I found that I need a space between "meta.db" and the "]" character. I was able to succesfully fix all the syntax errors and bugs, so now I will try to test the installation of the software on a Raspberry Pi although a VM would be perfectly acceptable as well.
+
+\labday{Thursday, June 25, 2020}
+Today, I copied the platform files into the \texttt{BEMS-LauerMiah-GitHub} directory into the directory \texttt{code}. When I run the script to run the platform, I found that the directory \texttt{code} interferes with a python module in the standard library called \texttt{code} which enables the ability to emulate Python's interactive interpreter. One of the \texttt{werkzeug} libraries was throwing an exception when it tried to interpret this module as the root directory of the project was named the same. After renaming the directory to \texttt{NewBEMS} everything appeared to work fine.
 \end{addmargin}
 
 \bibliographystyle{plain}

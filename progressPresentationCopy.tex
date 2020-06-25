@@ -60,12 +60,12 @@
 \usepackage[colorinlistoftodos]{todonotes}
 
 
-\title[Proposal Short Title]{Proposal Title}
+\title[Progress Update]{A Generalized Open Source Platform for Building Energy Management}
 
 % % A subtitle is optional and this may be deleted
 % \subtitle{Product Proposal}
 
-\author[F.~LastName1, F.~LastName2]{Firstname1~Lastname1 \and Firstname2~Lastname2 \\\and
+\author[B.~Lauer]{Brian~Lauer\\\and
 Advisor: Dr. Suruz Miah}
 % - Give the names in the same order as the appear in the paper.
 % - Use the \inst{?} command only if the authors have different
@@ -81,7 +81,7 @@ Advisor: Dr. Suruz Miah}
 % - Use the \inst command only if there are several affiliations.
 % - Keep it simple, no one is interested in your street address.
 
-\date[November~29,~2016]{Tuesday, November~29,~2016}
+\date[June~11,~2020]{Thursday, June~11,~2020}
 % - Either use conference name or its abbreviation.
 % - Not really informative to the audience, more for people (including
 %   yourself) who are reading the slides online
@@ -102,15 +102,6 @@ Advisor: Dr. Suruz Miah}
 
 % Delete this, if you do not want the table of contents to pop up at
 % the beginning of each subsection:
-\AtBeginSubsection[]
-{
-  \begin{frame}<beamer>{Outline}
-    \tableofcontents[currentsection,currentsubsection]
-  \end{frame}
-}
-
-
-
 
 % Let's get started
 \begin{document}
@@ -130,132 +121,21 @@ Advisor: Dr. Suruz Miah}
 
 \begin{frame}{Introduction}{}
   % applications of mobile robot navigation and problem description
+  \begin{figure}
+  \includegraphics[scale=0.3]{figs/ipe/BEMS-softwareArchitecture}
+  \end{figure}
+\end{frame}
+
+\section{Progress}
+\begin{frame}{Progress}{}
+\begin{itemize}
+	\item Wrote method \texttt{setDeviceToActive} to add a discovered device to the list of Active Devices once it is discovered
+	\item Added a modal popup to, in the future, show the list of active devices  
+\end{itemize}
 \end{frame}
 
 %----------------------------------
 
-\section{Background Study}
-
-\subsection{Literature}
-
-\begin{frame}{Background Study}{Literature}
-  
-\end{frame}
-
-%----------------------------------
-
-\subsection{Prior Work}
-
-\begin{frame}{Background Study}{Prior Work}
-  
-\end{frame}
-
-%----------------------------------
-
-\subsection{Challenges}
-
-\begin{frame}{Background Study}{Challenges}
-  
-\end{frame}
-
-%----------------------------------
-
-\section{Subsystem Level Functional Requirements}
-
-% put a slide with three dimensional system architecture drawing using ipe
-% another slide with explanation
-
-% put a slide with system block diagram
-
-\subsection{Block Diagram}
-
-\begin{frame}{Subsystem Level Functional Requirements}{Block Diagram}
-
-\begin{figure}
-  \centering
-  \missingfigure{Add your figure here.}  
-    % \includegraphics[scale=.6]{figs/ipe/subsystemBlockDiagramAlternate}
-    \caption{Subsystem level block diagram}
-    \label{fig:subsysblock}
-\end{figure}
-
-\end{frame}
-
-%----------------------------------
-
-\subsection{Specifications}
-
-\begin{frame}{Subsystem Level Functional Requirements}{Specifications}
-
-\end{frame}
-
-%----------------------------------
-
-\section{Engineering Efforts}
-
-\subsection{Simulation}
-
-\begin{frame}{Engineering Efforts}{Simulation}
-  
-\end{frame}
-
-%----------------------------------
-
-\subsection{Design}
-
-\begin{frame}{Engineering Efforts}{Design}
-  
-\end{frame}
-
-%----------------------------------
-
-\subsection{Experimental Activities}
-
-\begin{frame}{Engineering Efforts}{Experimental Activities}
-  
-\end{frame}
-
-%----------------------------------
-
-\section{Parts List}
-
-\begin{frame}{Parts List}{}
-  
-\end{frame}
-
-%----------------------------------
-
-\section{ECE 499 Deliverables}
-
-\subsection{Division of Labor}
-
-\begin{frame}{Deliverables}{Division of Labor}
-  
-\end{frame}
-
-%----------------------------------
-
-\subsection{Schedule for Completion}
-
-\begin{frame}{Deliverables}{Schedule for Completion}
-  
-\end{frame}
-
-%----------------------------------
-
-\section{Discussion}
-
-\begin{frame}{Discussion}{}
-  
-\end{frame}
-
-%----------------------------------
-
-\section{Future Directions}
-
-\begin{frame}{Future Directions}{}
-  
-\end{frame}
 
 % You can reveal the parts of a slide one at a time
 % with the \pause command:
