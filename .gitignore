@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # TeX auxiliary files #
 #######################
 *.aux
@@ -123,4 +122,4 @@ Icon?
 ########################
 TempTest/
 venv/
->>>>>>> 70b02ea27df34fc315bb8cb8689d461c0d262d6b
+
