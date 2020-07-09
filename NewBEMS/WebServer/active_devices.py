@@ -19,7 +19,6 @@ def renderActiveDevices():
         print("Waiting for discovery agent...")
         while not done_discovering:
             time.sleep(0.1)
-        # time.sleep(3)
         activeDevices = loadActiveDevices()
         print("activeDevices: " + str(activeDevices))
     return render_template('active_devices.html', deviceNames=activeDevices)

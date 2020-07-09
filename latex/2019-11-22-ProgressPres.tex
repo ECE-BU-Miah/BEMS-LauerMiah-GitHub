@@ -1,0 +1,193 @@
+% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
+%
+% In principle, this file can be redistributed and/or modified under
+% the terms of the GNU Public License, version 2.
+%
+% However, this file is supposed to be a template to be modified
+% for your own needs. For this reason, if you use this file as a
+% template and not specifically distribute it as part of a another
+% package/program, I grant the extra permission to freely copy and
+% modify this file as you see fit and even to delete this copyright
+% notice. 
+
+\documentclass{beamer}
+
+% There are many different themes available for Beamer. A comprehensive
+% list with examples is given here:
+% http://deic.uab.es/~iblanes/beamer_gallery/index_by_theme.html
+% You can uncomment the themes below if you would like to use a different
+% one:
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{boxes}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{default}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+\usetheme{Madrid}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+
+% Customize Warsaw color 
+\setbeamercolor*{palette primary}{use=structure,fg=white,bg=red!50!black}
+\setbeamercolor*{palette secondary}{use=structure,fg=white,bg=red!60!black}
+\setbeamercolor*{palette tertiary}{use=structure,fg=white,bg=red!70!black}
+
+% Customize Warsaw block title and background colors
+\setbeamercolor{block title}{bg=red!50!black,fg=white}
+
+
+% List your packages here
+
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{fancyvrb}
+
+
+\title[Proposal Pres]{A Universal Platform for Building Energy Management}
+
+% % A subtitle is optional and this may be deleted
+% \subtitle{Product Proposal}
+
+\author[B.~Lauer]{Brian~Lauer\\\and
+Advisor: Dr. Suruz Miah}
+% - Give the names in the same order as the appear in the paper.
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\institute[Bradley University] % (optional, but mostly needed)
+{
+  Department of Electrical and Computer Engineering\\
+  Bradley University\\
+  1501 W. Bradley Avenue\\
+  Peoria, IL, 61625, USA
+}
+% - Use the \inst command only if there are several affiliations.
+% - Keep it simple, no one is interested in your street address.
+
+\date[November~22,~2019]{Friday, November~22,~2019}
+% - Either use conference name or its abbreviation.
+% - Not really informative to the audience, more for people (including
+%   yourself) who are reading the slides online
+
+\logo{\hfill\href{http://www.bradley.edu}{\includegraphics[width=0.75cm]{../figs/logoBU1-Print}}}  % place logo in every page 
+
+
+\subject{Building/Home Automation}
+% This is only inserted into the PDF information catalog. Can be left
+% out. 
+
+% If you have a file called "university-logo-filename.xxx", where xxx
+% is a graphic format that can be processed by latex or pdflatex,
+% resp., then you can add a logo as follows:
+
+% \pgfdeclareimage[height=0.5cm]{university-logo}{university-logo-filename}
+% \logo{\pgfuseimage{university-logo}}
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+
+% Let's get started
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+  % You might wish to add the option [pausesections]
+\end{frame}
+
+\section{Objectives}
+\begin{frame}{Objectives}
+\begin{itemize}
+\item Narrow down idea for new device
+\item Implement scheduling feature for motor in BEMOSS
+\end{itemize}
+\end{frame}
+
+\section{Changes to Plan}
+\begin{frame}{Changes to Plan}
+\begin{itemize}
+\item Abandoned plan to integrate stepper motor (little to no application)
+\item Decided on new device - Sensibo Sky
+%\begin{figure}
+%\includegraphics[scale=0.3]{../figs/img/513272-sensibo-sky.jpg}
+%\caption{Sensibo Sky, courtesy of PCMag.com}
+%\end{figure}
+\end{itemize}
+\end{frame}
+
+\section{Details on New Device}
+\begin{frame}{Details on New Device}
+\begin{itemize}
+\item Sensibo Sky - Smart air conditioner controller
+\item Connects to any AC unit through IR remote
+\item Compatible with IFTTT, Amazon Alexa, Amazon Echo, Google Home
+\item Capable of measuring temperature, humidity, battery voltage of air conditioner
+\item Set fan speed, temperature, swing mode, temperature unit (F, C) of air conditioner
+\item Open API - \url{https://github.com/kdschlosser/Sensibo_Sky_API.git}
+\end{itemize}
+\end{frame}
+
+\section{Implementing Motor Scheduling}
+\begin{frame}{Implementing Motor Scheduling}
+\begin{itemize}
+\item Added view function \texttt{motor\_schedule} in \texttt{webapps.schedule.views.py} 
+\item Copied from view function \texttt{plugload\_schedule} in same file
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Implementing Motor Scheduling}
+%\begin{figure}
+%\includegraphics[scale=0.4]{../figs/motor_schedule.png}
+%\end{figure}
+\end{frame}
+
+\begin{frame}{Implementing Motor Scheduling}
+\begin{itemize}
+\item Exception thrown at line 3 of \texttt{motor\_schedule}
+\item 'User' object has no attribute 'group'
+\item Code: \\\texttt{user\_group = request.user.group.all().values\_list('name', flat=True)}
+\end{itemize}
+\end{frame}
+
+\section{Plans}
+\begin{frame}{Plans}
+\begin{itemize}
+\item Fix issue with scheduling
+\item Start integrating Sensibo Sky
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\centering
+\Huge
+Any questions?
+\end{frame}
+\end{document}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
