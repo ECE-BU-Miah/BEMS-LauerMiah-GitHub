@@ -1,4 +1,4 @@
 TESTING=True
-DEBUG=False
+DEBUG=True
 SECRET_KEY='dev'
-DATABASE='database.db'
+DATABASE='meta.db'

@@ -5,6 +5,7 @@ import subprocess
 import importlib
 import json
 import sqlite3
+import requests
 
 import global_settings
 
@@ -22,47 +23,46 @@ class DiscoveryAgent():
         socket = context.socket(zmq.SUB)
         socket.connect(f"tcp://localhost:{self.port}")
         socket.setsockopt(zmq.SUBSCRIBE, topic.encode("utf-8"))
-        # print("Starting main loop!")
+        print("Starting main loop!")
         while True:
-            #print("Receiving!")
+            print("Receiving!")
             self.msg = socket.recv().decode('utf-8')
-            #print(self.msg)
-            topic, method, args = self.msg.split()
-            self.processMethod(method, args)
-            #print("Sleeping!")
+            print(self.msg)
+            topic, method = self.msg.split()
+            self.processMethod(method)
+            print("Sleeping!")
             time.sleep(0.5)
         context.term()
 
-    def processMethod(self, method, args):
+    def processMethod(self, method, args=None):
         if method=="searchForDevices":
-            self.searchForDevices(args)
+            self.searchForDevices()
+        elif method=="autoSearchForDevices":
+            self.autoSearchForDevices()
 
-    def searchForDevices(self, args):
-        ids = json.loads(args)
+    def searchForDevices(self):
+        # ids = json.loads(args)
         conn = sqlite3.connect(global_settings.WEBSERVER_DIR + 'meta.db')
         curs = conn.cursor()
-        #print(ids)
-        for id in ids:
-            curs.execute("SELECT api FROM SupportedDevices WHERE id = ?", (id,))
-            api = curs.fetchone()[0]
-            #print(api)
-            urlList = list()
-            if api is not None:
-                # The directory NewBEMS must be on the PYTHONPATH variable
-                # for this to work. Do this by adding the directory to the
-                # directories.pth file in the site-packages directory.
-                try:
-                    api_mod = importlib.import_module('DeviceDrivers.' + api + 'API')
-                except Exception as e:
-                    pass
-                urlList = api_mod.findDevices()
-                #print(urlList)
-                for url in urlList:
-                    metadata = api_mod.findMetadata(url)
-                    #print(metadata)
-                    self.setDeviceToActive(metadata)
+
+        curs.execute("SELECT api FROM SupportedDevices;")
+        apis = curs.fetchall()
+        print(str([api[0] for api in apis]))
+        urlList = list()
+        for api in apis:
+            try:
+                api_mod = importlib.import_module('DeviceDrivers.' + api[0] + 'API')
+            except Exception as e:
+                print(e)
+            urlList = api_mod.findDevices()
+            # print(urlList)
+            for url in urlList:
+                metadata = api_mod.findMetadata(url)
+                # print("metadata: " + str(metadata))
+                self.setDeviceToActive(metadata)
         curs.close()
         conn.close()
+        requests.post('http://localhost:5000/active_devices/agents')
 
     def setDeviceToActive(self, metadata):
         conn = sqlite3.connect(global_settings.WEBSERVER_DIR + 'meta.db')
@@ -70,15 +70,16 @@ class DiscoveryAgent():
         #print('Executing cursor!')
         curs.execute("SELECT id FROM ActiveDevices WHERE name = ?;", (metadata['name'],))
         result = curs.fetchall()
-        #print(result)
+        # print(result)
         if result == []:
             try:
-                #print('Adding device to active devices')
-                curs.execute("INSERT INTO ActiveDevices (name, manufacturer, macaddress) VALUES (?, ?, ?);", (metadata['name'], metadata['manufacturer'], metadata['macaddress']))
+                print('Adding device to active devices')
+                curs.execute("INSERT INTO ActiveDevices (name, manufacturer, macaddress, image, ip, port) VALUES (?, ?, ?, ?, ?, ?);", (metadata['name'], metadata['manufacturer'], metadata['macaddress'], metadata['image'], metadata['ip'], metadata['port']))
+                conn.commit()
                 # For debugging:
-                #curs.execute("SELECT * FROM ActiveDevices;")
-                #print("Active devices table: ")
-                #print(curs.fetchall())
+                # curs.execute("SELECT * FROM ActiveDevices;")
+                # print("Active devices table: ")
+                # print(curs.fetchall())
             except Exception as e:
                 #print("Insertion into active devices failed")
                 print(e)

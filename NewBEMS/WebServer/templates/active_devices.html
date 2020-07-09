@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Intelligent Building Energy Monitoring System</title>
+    <link type="text/css" rel="stylesheet" href="../static/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="../static/css/bootstrap-toggle.min.css">
+    <link type="text/css" rel="stylesheet" href="../static/css/nav_top.css">
+    <link type="text/css" rel="stylesheet" href="../static/css/discovery.css">
+    <!-- Tip: use Ctrl + F5 to reload all resources on the page.-->
+  </head>
+  <body>
+    <div class="container white-bg">
+    <h1 class="sw-title"> Intelligent Building Energy Monitoring System</h1>
+    {% include 'nav_top.html' %}
+    <div class="container">
+      {% if deviceNames == [] %}
+        <div class="no-devices">
+          No devices are currently available. Refresh to search for devices.
+        </div>
+      {% else %}
+        <div id="accordion">
+          {% for device in deviceNames %}
+          <div class="card mb-4">
+            <div class="card-header" id="headingOne">
+              <h5 class="mb-0">
+                <div class="float-left">
+                  <img src="../static/img/{{ device[2] }}" width=100 height=100>
+                </div>
+                {{ device[1] }}
+                <button class="btn btn-link float-right" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    <i data-feather="chevrons-down"></i>
+                </button>
+              </h5>
+            </div>
+            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
+              <div class="card-body">
+                <div class="float-left ml-2 mb-3">
+                  Device for controlling IoT devices remotely in the home.
+                  </br>
+                </br>
+                  <input type="checkbox" id="{{ device[0] }}" data-onstyle="success" data-toggle="toggle">
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    <!-- <input class="btn btn-primary" type="submit" id="find_devices" value="Search for devices"> -->
+    <a class="nav-link" href="/active_devices"><i data-feather="refresh-cw"></i></a>
+    </div>
+    </div>
+    <script src="../static/js/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+    <script src="../static/js/jquery-3.5.1.js"></script>
+    <script src="../static/js/popper.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <script src="../static/js/bootstrap-toggle.min.js"></script>
+    <script src="../static/js/notify.js"></script>
+    <script src="../static/js/apps/discovery.js"></script>
+    <script src="../static/js/apps/active_device.js"></script>
+  </body>
+</html>

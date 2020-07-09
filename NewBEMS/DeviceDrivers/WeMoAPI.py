@@ -3,6 +3,9 @@ from urllib.request import urlopen
 from xml.dom import minidom
 import requests
 import time
+from urllib.parse import urlparse
+import global_settings
+import sqlite3
 
 BUFFERSIZE = 65507
 TIMEOUT = 3
@@ -34,7 +37,6 @@ def findDevices():
         try:
             data, addr = s_obj.recvfrom(BUFFERSIZE)
             data = data.decode('utf-8')
-            # print(data)
             data_list = data.split('\r\n')
             response_msg = data_list[0]
             headers = data_list[1:]
@@ -52,11 +54,16 @@ def findDevices():
 def findMetadata(url):
     '''
     Accepts a URL and outputs a dictionary containing various properties
-    of the device. For the WeMo, the following parameters will be obtained.
+    of the device.
     '''
     metadata = dict()
     setupUrl = url + '/setup.xml'
     response = requests.get(setupUrl)
+    parsedUrl = urlparse(url)
+    netLocation = parsedUrl.netloc
+    netLocationList = netLocation.split(':')
+    ip = netLocationList[0]
+    port = netLocationList[1]
     dom = minidom.parseString(response.content)
     try:
         macAddress = dom.getElementsByTagName('macAddress')[0].firstChild.data
@@ -67,6 +74,10 @@ def findMetadata(url):
     metadata['macaddress'] = macAddress
     metadata['manufacturer'] = manufacturer
     metadata['name'] = friendlyName
+    metadata['image'] = "wemoSwitchIcon.svg"
+    metadata['api'] = "WeMo"
+    metadata['ip'] = ip
+    metadata['port'] = port
     return metadata
 
 
@@ -99,10 +110,13 @@ def getState(url):
     elif(int(binaryState) == 0):
         return 'OFF'
 
-def setState(state, url):
+def setState(deviceId, state):
     '''
     Uses XML SOAP requests to set the device state (ON or OFF).
     '''
+    conn = sqlite3.connect(global_settings.WEBSERVER_DIR + 'meta.db')
+    curs = conn.cursor()
+
     header = {
         'Content-Type': 'text/xml; charset=utf-8',
         'SOAPACTION': '"urn:Belkin:service:basicevent:1#SetBinaryState"'
@@ -128,12 +142,12 @@ def setState(state, url):
 
 if __name__ == '__main__':
     # urls = wemo.findDevices()
-    state = getState(url='http://192.168.0.30:49153')
+    state = getState(url='http://192.168.0.20:49153')
     # print(urls)
     print('state: ' + str(state))
-    setState(1, url='http://192.168.0.30:49153')
-    state = getState(url='http://192.168.0.30:49153')
+    setState(1, url='http://192.168.0.20:49153')
+    state = getState(url='http://192.168.0.20:49153')
     print('state: ' + str(state))
     time.sleep(1)
-    setState(0, url='http://192.168.0.30:49153')
-    print(findMetadata(url='http://192.168.0.30:49153'))
+    setState(0, url='http://192.168.0.20:49153')
+    print(findMetadata(url='http://192.168.0.20:49153'))

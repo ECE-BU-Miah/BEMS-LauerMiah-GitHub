@@ -1,5 +1,6 @@
 $(document).ready(function() {
   // var ws = new WebSocket();
+
   $("#find_devices").click( function(evt) {
     // Prevent the default behavior from occurring.
     evt.preventDefault();
@@ -19,5 +20,4 @@ $(document).ready(function() {
       }
     });
   });
-
 });

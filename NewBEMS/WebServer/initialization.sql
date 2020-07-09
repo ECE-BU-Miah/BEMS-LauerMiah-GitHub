@@ -15,11 +15,15 @@ CREATE TABLE IF NOT EXISTS ActiveDevices (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT,
   manufacturer TEXT,
-  macaddress TEXT
+  macaddress TEXT,
+  image TEXT,
+  api TEXT,
+  ip TEXT,
+  port TEXT
 );
 
 INSERT INTO SupportedDevices (manufacturer, name, api)
 VALUES ('Belkin', 'Insight Switch', 'WeMo');
---
--- INSERT INTO SupportedDevices (manufacturer, name, api)
--- VALUES ('Beaglebone', 'DC Motor', 'BB');
+
+INSERT INTO SupportedDevices (manufacturer, name, api)
+VALUES ('Beaglebone', 'DC Motor', 'BB');
