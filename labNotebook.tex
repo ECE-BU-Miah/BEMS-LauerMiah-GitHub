@@ -1631,7 +1631,142 @@ fi
 After some Googling I found that I need a space between "meta.db" and the "]" character. I was able to succesfully fix all the syntax errors and bugs, so now I will try to test the installation of the software on a Raspberry Pi although a VM would be perfectly acceptable as well.
 
 \labday{Thursday, June 25, 2020}
-Today, I copied the platform files into the \texttt{BEMS-LauerMiah-GitHub} directory into the directory \texttt{code}. When I run the script to run the platform, I found that the directory \texttt{code} interferes with a python module in the standard library called \texttt{code} which enables the ability to emulate Python's interactive interpreter. One of the \texttt{werkzeug} libraries was throwing an exception when it tried to interpret this module as the root directory of the project was named the same. After renaming the directory to \texttt{NewBEMS} everything appeared to work fine.
+Today, I copied the platform files into the \texttt{BEMS-LauerMiah-GitHub} directory into the directory \texttt{code}. When I run the script to run the platform, I found that the directory \texttt{code} interferes with a python module in the standard library called \texttt{code} which enables the ability to emulate Python's interactive interpreter. One of the \texttt{werkzeug} libraries was throwing an exception when it tried to interpret this module as the root directory of the project was named the same. After renaming the directory to \texttt{NewBEMS} everything appeared to work fine. Also, I changed the operator '>' to '>>' in the \texttt{install.sh} script to append to the .pth files rather than over write.
+
+\labday{Friday, June 26, 2020}
+The tasks for today are the following:
+\begin{itemize}
+\item Implement a feature to allow the Device Discovery agent to loop a set number of times and call the find\_devices function for each supported device API module. 
+\end{itemize}
+I decided that the modal popup is not really necessary if auto discovery will be enabled by default as the devices will simply show up on the page and the user will not need to be notified of this through a modal. I problem I ran into is the fact that the web pages are not uploading despite removing the modal button and popup being removed from the \texttt{discovery.html} page. It was found that I was running the server from the wrong directory as I have the software installed in my home directory. 
+
+\labday{Tuesday, June 30, 2020}
+The problem I was having the problem of svgs not rendering in Chrome as I would like to add an icon made in inkscape for each device.
+
+\labday{Wednesday, July 1, 2020}
+After changing a line in the svg file created by inkscape, the image properly rendered in chrome. Today, I worked on reworking the discovery process by eliminating the search for device page and just having a single page for active devices. Also, I added some HTML to display a message when no devices are found on the network. I created a second python flask view function module \texttt{active\_devices.py} which will handle urls to the active\_devices page rather than the discovery page. I simplified the discovery process by having a single method titled \texttt{searchForDevices} in the \texttt{DiscoveryAgent} class which will simply perform the following actions:
+\begin{itemize}
+\item Pull apis from the \texttt{SupportedDevices} table
+\item Import each API module corresponding to that API
+\item Call findDevices on each API module and assign the url list to a variable
+\item Retreive the metadata from each list
+\item Add metadata to the \texttt{ActiveDevices} table
+\item Send post request to the server to get the active devices from the table and render to the UI
+\end{itemize}
+The problem I am trying to solve now is how to get an update from the agent when it has completed discovering devices. What this will require is sending a message to the UI. A solution to this problem is by simply returning a tuple from a flask route~\footnote{\url{https://stackoverflow.com/questions/24295426/python-flask-intentional-empty-response}}. The response will be empty with a status of $204$ (no response). Even though it may not be the best implementation, I decided to add a global variable \texttt{done\_discovering} which will be set to true when a request has been sent to the url \texttt{/active\_devices/agents} by the DiscoveryAgent and the \texttt{renderActiveDevices} function will constantly wait for it to be set to True before rendering data to the html page.
+\medbreak\noindent
+A problem I am running into is the fact that the Discovery Agent is adding devices to the ActiveDevices table. However, when the following query is made by the flask backend:
+\begin{Verbatim}
+SELECT * FROM ActiveDevices;
+\end{Verbatim}
+it returns an empty list. Although changes were made shortly before it to add devices to the table. The mistake I made was forgetting to include the statement:
+\begin{Verbatim}
+conn.commit()
+\end{Verbatim}
+which commits the changes to the database after inserting into the \texttt{ActiveDevices} table.
+\medbreak\noindent
+The next task is to add a collapsible accordian to the \texttt{active\_devices} page to display all the devices that can be controlled in one page~\footnote{\url{https://getbootstrap.com/docs/4.3/components/collapse/}}. In addition, I added a column to the \texttt{ActiveDevices} table, image, which will contain a string specifiying an svg in the static/img directory.	
+
+\labday{Monday, July 6, 2020}
+What I worked on today was getting the on/off switch to work for the WeMo Switch. First, I added a method to the control agent titled \texttt{setDeviceStatus}. Since this method will be required to call the \texttt{setState} method of the device that requests it, an api column is required in the ActiveDevices table. Then, the module will be imported using the built in \texttt{importlib} module by calling \texttt{import\_module}. Since I realized that the url is required to be passed in to the \texttt{setState} function of the WeMoAPI, I decided to instead add two more fields to the active devices table titled \texttt{ip} and \texttt{port}. The url will parsed using \texttt{urllib.parse.urlparse}. Then different properties can be referenced from the returned object such as the \texttt{scheme},\texttt{netloc}, \texttt{path}, \texttt{parameters}, \texttt{query}, and \texttt{fragment}. Using the following code:
+\begin{Verbatim}
+from urllib.parse import urlparse
+parsedUrl = urlparse(url)
+netLocation = parsedUrl.netloc
+netLocationList = netLocation.split(':')
+ip = netLocationList[0]
+port = netLocationList[1]
+\end{Verbatim}
+the ip and port is obtained. I replaced \texttt{url} as the first argument to the \texttt{setState} function with \texttt{deviceId} which will be the id of the target device.
+
+\labday{Tuesday, July 7, 2020}
+I worked on getting Jquery code added to the active devices page by adding a file titled \texttt{active\_device.js} with the following function:
+\begin{Verbatim}
+$(document).ready(function() {
+  $('input[type="checkbox"]').click(function(evt) {
+    evt.preventDefault();
+    var dict = {};
+    dict["id"] = $(this).attr("id");
+    if($(this).prop("checked") == true) {
+      dict["powerState"] = "ON";
+    } else if ($(this).prop("checked") == false) {
+      dict["powerState"] = "OFF";
+    }
+    jsonDict = JSON.stringify(dict)
+    $.ajax({
+      url: '/active_devices/ajax',
+      type: 'POST',
+      contentType: 'application/json;charset=UTF-8',
+      data: jsonDict,
+      success: function(response) {
+        console.log(response);
+      }
+    });
+
+  });
+
+});
+\end{Verbatim}
+Essentially, when a device is pressed the corresponding id of the device is the id of the button element. Then, the state of the device is assigned to the key "powerState" whether it be "ON" or "OFF". This dictionary is sent with the powerState and id key/value pairs as a json encoded string to the server. However, the click function does not appear to be called when the toggle button is clicked. When the \texttt{data-toggle} attribute of the \texttt{input} element described below:
+\begin{Verbatim}
+<input type="checkbox" id="wemo" data-onstyle="success" data-toggle="toggle">
+\end{Verbatim}
+is removed, the checkbox no longer becomes a bootstrap toggle checkbox but rather a normal checkbox. This does solve the problem of the on click listener not working properly in Jquery though. Therefore, it must be determined how to properly listen for onclick events from the bootstrap toggle button.
+
+\labday{Wednesday, July 8, 2020}
+I was able to get the bootstrap toggle function to be detected with javascript using the \texttt{change} method:
+\begin{Verbatim}
+$('input[type="checkbox"]').change(function() {
+	if($(this).prop("checked") == true) {
+		console.log("checked true");
+		console.log($(this).attr("id")); //$
+	}
+	console.log("clicked");
+});
+\end{Verbatim}
+A function similar to the one above was written to send an AJAX request to the backend. 
+\begin{Verbatim}
+$('input[type="checkbox"]').change(function() {
+	// evt.preventDefault();
+	console.log("Changed checkbox");
+	var dict = {};
+	dict["id"] = $(this).attr("id");
+	if($(this).prop("checked") == true) {
+		dict["powerState"] = "ON";
+	} else if ($(this).prop("checked") == false) {
+		dict["powerState"] = "OFF";
+	}
+	jsonDict = JSON.stringify(dict)
+	console.log(dict);
+	console.log(jsonDict);
+	$.ajax({
+		url: '/active_devices/ajax',
+		type: 'POST',
+		contentType: 'application/json;charset=UTF-8',
+		data: jsonDict,
+		success: function(response) {
+			console.log(response);
+		}
+	});
+}); //$
+\end{Verbatim}
+A potential problem I see in using publish/subscribe in sending data to agents is the fact that the following exception is thrown if the toggle button is pressed too frequently:
+\begin{Verbatim}
+zmq.error.ZMQError: Address already in use
+\end{Verbatim}
+as multiple publishes are being attempted using the same address. The line
+\begin{Verbatim}
+python3 ControlAgent.py &
+\end{Verbatim}
+which will run the Control Agent. However, a problem exists in the \texttt{subscribe} method as the message received from the web server:
+\begin{Verbatim}
+self.msg = socket.recv().decode('utf-8')
+\end{Verbatim}
+does not unpack to three different strings when using the line
+\begin{Verbatim}
+topic, method, args = self.msg.split()
+\end{Verbatim}
+as \texttt{args} is a dictionary which contains a space.
 \end{addmargin}
 
 \bibliographystyle{plain}
