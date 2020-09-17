@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS ActiveDevices (
   image TEXT,
   api TEXT,
   ip TEXT,
-  port TEXT
+  port TEXT,
+  queryable TEXT
 );
 
 INSERT INTO SupportedDevices (manufacturer, name, api)

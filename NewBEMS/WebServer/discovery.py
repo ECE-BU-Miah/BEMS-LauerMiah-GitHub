@@ -38,18 +38,7 @@ def handleAgentRequest():
     if request.method == "POST":
         activeDevices = loadActiveDevices()
     return render_template('discovery.html', deviceNames=activeDevices)
-#
-# def loadActiveDevices():
-#     db = database.DBConnection(global_settings.WEBSERVER_DIR + 'meta.db')
-#     db.cursor.execute('SELECT manufacturer, name FROM ActiveDevices')
-#     devices = db.cursor.fetchall()
-#     displayData = list()
-#     for device in devices:
-#         s = ' '.join(device)
-#         displayData.append(s)
-#     db.close()
-#     return displayData
-#
+
 def loadSupportedDevices():
     db = database.DBConnection(global_settings.WEBSERVER_DIR + 'meta.db')
     db.cursor.execute('SELECT manufacturer, name FROM SupportedDevices')

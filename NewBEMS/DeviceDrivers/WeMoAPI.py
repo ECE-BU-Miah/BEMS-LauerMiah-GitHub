@@ -78,37 +78,59 @@ def findMetadata(url):
     metadata['api'] = "WeMo"
     metadata['ip'] = ip
     metadata['port'] = port
+
+    # Data values that can obtained from the device
+    metadata['queryable'] = 'power|onOffStatus'
     return metadata
 
 
-def getState(url):
+def getState(deviceId, params, url=None):
     '''
-    Uses XML SOAP requests to get the device state.
+    Uses XML SOAP requests to get the device state. Two different devices
+    parameters will be queryable from the Switch: power and binary state.
+    Params is a list.
     '''
+    conn = sqlite3.connect(global_settings.WEBSERVER_DIR + 'meta.db')
+    curs = conn.cursor()
+    retDict = {}
+
+    body = "<?xml version='1.0' encoding='utf-8'?>" \
+            "<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'>" \
+            "<s:Body>" \
+            "<u:GetInsightParams xmlns:u='urn:Belkin:service:insight:1'>" \
+            "</u:GetInsightParams>" \
+            "</s:Body>" \
+            "</s:Envelope>"
+
     header = {
-        'Content-Type': 'text/xml; charset=utf=8',
-        'SOAPACTION': '"urn:Belkin:service:basicevent:1#GetBinaryState"'
+        'Content-Type': 'text/xml; charset="utf-8"',
+        'SOAPACTION': '"urn:Belkin:service:insight:1#GetInsightParams"'
     }
-    body = "<?xml version='1.0' encoding='utf-8'?>"\
-           "<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding'>"\
-           "<s:Body>"\
-           "<u:GetBinaryState xmlns:u='urn:Belkin:service:basicevent:1'>"\
-           "</u:GetBinaryState>"\
-           "</s:Body>"\
-           "</s:Envelope>"
-    if url is not None:
-        baseUrl = url
+
+    if url is None:
+        curs.execute("SELECT ip, port FROM ActiveDevices WHERE id = ?;", (deviceId))
+        networkCreds = curs.fetchall()
+        deviceIp = networkCreds[0][0]
+        devicePort = networkCreds[0][1]
+        baseUrl = 'http://' + deviceIp + ':' + devicePort
     else:
         baseUrl = url
-    print(baseUrl)
-    response = requests.post(baseUrl + '/upnp/control/basicevent1', body, headers = header)
+    response = requests.post(baseUrl + '/upnp/control/insight1', body, headers = header)
+
     dom = minidom.parseString(response.content)
-    print(dom.getElementsByTagName('BinaryState')[0].firstChild.data)
-    binaryState = dom.getElementsByTagName('BinaryState')[0].firstChild.data
-    if(int(binaryState) > 0):
-        return 'ON'
-    elif(int(binaryState) == 0):
-        return 'OFF'
+    state = dom.getElementsByTagName('InsightParams')[0].firstChild.data
+
+    "State|Seconds of last state change|last on seconds|Seconds on today|unknown|Total Seconds|unknown|Power(mW)|" \
+                      "Energy used today (mW*min)|Energy used total (mW*min)|unknown"
+
+    stateList = state.split('|')
+    print(stateList)
+    for param in params:
+        if param == "power":
+            retDict["power"] = float(stateList[7]) / 1000.0;
+        elif param == "binaryState":
+            retDict["binaryState"] = "ON" if int(stateList[0]) else "OFF"
+    return retDict
 
 def setState(deviceId, state):
     '''
@@ -130,24 +152,28 @@ def setState(deviceId, state):
            "</u:SetBinaryState>"\
            "</s:Body>"\
            "</s:Envelope>"
-    if url is not None:
-        baseUrl = url
-    else:
-        baseUrl = url
-
+    curs.execute("SELECT ip, port FROM ActiveDevices WHERE id = ?;", (deviceId))
+    networkCreds = curs.fetchall()
+    deviceIp = networkCreds[0][0]
+    devicePort = networkCreds[0][1]
+    baseUrl = 'http://' + deviceIp + ':' + devicePort
     response = requests.post(baseUrl + '/upnp/control/basicevent1', body, headers=header)
     dom = minidom.parseString(response.content)
     status = dom.getElementsByTagName('BinaryState')[0].firstChild.data
     print(status)
 
 if __name__ == '__main__':
-    # urls = wemo.findDevices()
-    state = getState(url='http://192.168.0.20:49153')
-    # print(urls)
-    print('state: ' + str(state))
-    setState(1, url='http://192.168.0.20:49153')
-    state = getState(url='http://192.168.0.20:49153')
-    print('state: ' + str(state))
-    time.sleep(1)
-    setState(0, url='http://192.168.0.20:49153')
-    print(findMetadata(url='http://192.168.0.20:49153'))
+    # # urls = wemo.findDevices()
+    # state = getState(url='http://192.168.0.20:49153')
+    # # print(urls)
+    # print('state: ' + str(state))
+    # setState(1, url='http://192.168.0.20:49153')
+    # state = getState(url='http://192.168.0.20:49153')
+    # print('state: ' + str(state))
+    # time.sleep(1)
+    # setState(0, url='http://192.168.0.20:49153')
+    # print(findMetadata(url='http://192.168.0.20:49153'))
+    print("Finding devices")
+    print(findDevices())
+    state = getState(None,['power', 'binaryState'],'http://192.168.0.18:49153')
+    print(state)

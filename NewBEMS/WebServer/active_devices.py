@@ -10,6 +10,7 @@ bp = Blueprint('active_devices', __name__)
 
 done_discovering = False
 
+# http://localhost:5000/active_devices
 @bp.route('/active_devices')
 def renderActiveDevices():
     global done_discovering
@@ -30,14 +31,26 @@ def getRequestFromAgent():
         done_discovering = True
     return ('', 204)
 
-@bp.route('/active_devices/ajax', methods=['POST'])
-def sendRequestToControlAgent():
+@bp.route('/active_devices/ajax/setDeviceStatus', methods=['POST'])
+def sendDeviceStatusToControlAgent():
     if request.method == "POST":
         data = request.data.decode('utf-8')
         print("decoded data" + data)
         data = json.loads(data)
         print("id: " + data["id"])
         pubsub.publish('control', 'setDeviceStatus', data)
+    return data
+
+@bp.route('/active_devices/ajax/getDeviceStatus', methods=['POST'])
+def getDeviceStatusFromControlAgent():
+    global done_discovering
+
+    if request.method == "POST":
+        data = request.data.decode('utf-8')
+        data = json.loads(data)
+        pubsub.publish('control', 'getDeviceStatus', data)
+        # if done_discovering == True:
+        #
     return data
 
 def loadActiveDevices():

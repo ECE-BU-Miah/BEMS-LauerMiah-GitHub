@@ -14,7 +14,7 @@
       console.log(dict);
       console.log(jsonDict);
       $.ajax({
-        url: '/active_devices/ajax',
+        url: '/active_devices/ajax/setDeviceStatus',
         type: 'POST',
         contentType: 'application/json;charset=UTF-8',
         data: jsonDict,

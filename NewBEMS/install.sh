@@ -7,7 +7,7 @@ webserver_dir=$project_dir$tempwebserver_dir
 sudo apt-get update
 
 # Install pip3 and venv
-sudo apt-get install python3-pip python3-venv xterm sqlite3
+sudo apt-get install python3-pip python3-venv xterm sqlite3 cassandra-driver
 
 # Delete the venv if already exists
 if [ -d "venv/" ];

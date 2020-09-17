@@ -6,7 +6,7 @@ import importlib
 import json
 import sqlite3
 import requests
-
+import utils
 import global_settings
 
 class DiscoveryAgent():
@@ -74,12 +74,14 @@ class DiscoveryAgent():
         if result == []:
             try:
                 print('Adding device to active devices')
-                curs.execute("INSERT INTO ActiveDevices (name, manufacturer, macaddress, image, ip, port) VALUES (?, ?, ?, ?, ?, ?);", (metadata['name'], metadata['manufacturer'], metadata['macaddress'], metadata['image'], metadata['ip'], metadata['port']))
+                curs.execute("INSERT INTO ActiveDevices (name, manufacturer, macaddress, image, api, ip, port, queryable) VALUES (?, ?, ?, ?, ?, ?, ?);", (metadata['name'], metadata['manufacturer'], metadata['macaddress'], metadata['image'], metadata['api'], metadata['ip'], metadata['port'], metadata['queryable']))
                 conn.commit()
-                # For debugging:
-                # curs.execute("SELECT * FROM ActiveDevices;")
-                # print("Active devices table: ")
-                # print(curs.fetchall())
+
+                curs.execute("SELECT id FROM ActiveDevices WHERE name=?", (metadata['name']))
+                _data = curs.fetchall()
+                if _data is not None:
+                    id = _data[0][0]
+                utils.createDeviceTSDTable(id)
             except Exception as e:
                 #print("Insertion into active devices failed")
                 print(e)

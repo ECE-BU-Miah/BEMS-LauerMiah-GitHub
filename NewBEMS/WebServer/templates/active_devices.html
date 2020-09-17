@@ -41,6 +41,11 @@
                 </br>
                   <input type="checkbox" id="{{ device[0] }}" data-onstyle="success" data-toggle="toggle">
                 </div>
+                {% if 'power' in device %}
+                  <div class="float-right">
+                    Power:
+                  </div>
+                {% endif %}
               </div>
             </div>
           </div>
